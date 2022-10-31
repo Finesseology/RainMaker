@@ -49,19 +49,19 @@ public class GameApp extends Application {
             @Override
             public void handle(KeyEvent event) {
                 if (event.getCode() == KeyCode.LEFT) {
-                    System.out.println("Left Arrow: <-");
+                    game.updateHeading(-15);
                 }
 
                 if (event.getCode() == KeyCode.RIGHT) {
-                    System.out.println("Right Arrow: ->");
+                    game.updateHeading(15);
                 }
 
                 if (event.getCode() == KeyCode.UP) {
-                    System.out.println("Up Arrow: ^");
+                    game.updateSpeed(0.1);
                 }
 
                 if (event.getCode() == KeyCode.DOWN) {
-                    System.out.println("Down Arrow: v");
+                    game.updateSpeed(-0.1);
                 }
 
             }
@@ -88,7 +88,10 @@ class Game extends Pane{
 
 
     Game(){
-        System.out.println(gameSize);
+        init();
+    }
+
+    public void init(){
         pond = new Pond();
         cloud = new Cloud(gameSize);
         pad = new Helipad();
@@ -98,9 +101,23 @@ class Game extends Pane{
 
         getChildren().addAll(pond, cloud, pad, helicopter);
     }
+    public void reset(){
+        getChildren().clear();
+        init();
+    }
 
     public void run(long now){
+        helicopter.move();
+    }
 
+    public void updateHeading(int heading){
+        helicopter.updateHeading(heading);
+        System.out.println("Heading: " + helicopter.getHeading());
+        helicopter.setRotate(helicopter.getHeading() + heading);
+    }
+
+    public void updateSpeed(double speed){
+        helicopter.updateSpeed(speed);
     }
 
 }
@@ -361,18 +378,36 @@ class Helicopter extends Moveable implements Updatable {
 
     @Override
     public void move() {
-
+        //helicopter.setRotate(heading);
     }
 
-    private void updateIndicator(){
+    private void turn(){
+        headingIndicator = new Rectangle(
+                body.getCenterX() - 2 + heading,
+                body.getCenterY() + heading,
+                5,
+                40
+        );
     }
 
+    public void updateHeading(int update){
+        heading -= update;
+    }
+
+    public void updateSpeed(double s){
+        System.out.println("speed: " + speed);
+        speed += s;
+    }
     public boolean isIgnitionOn() {
         return ignitionOn;
     }
 
     public static void toggleIgnition() {
         ignitionOn = !ignitionOn;
+    }
+
+    public double getHeading(){
+        return this.heading;
     }
 
 }
