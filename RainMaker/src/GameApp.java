@@ -91,7 +91,6 @@ class Game extends Pane{
     private Cloud cloud;
     private Helipad pad;
     private Helicopter helicopter;
-    GameText fuelText;
 
     private int fuel;
     private int water;
@@ -104,6 +103,7 @@ class Game extends Pane{
 
 
     Game(){
+        fuel = 25000;
         init();
     }
 
@@ -112,19 +112,12 @@ class Game extends Pane{
         cloud = new Cloud(gameSize);
         pad = new Helipad();
         helicopter = new Helicopter(new Point2D(Helipad.getCenter().getX(),
-                Helipad.getCenter().getY()));
-        initFuel();
+                Helipad.getCenter().getY()), fuel);
 
-        getChildren().addAll(pond, cloud, pad, helicopter, fuelText);
+        getChildren().addAll(pond, cloud, pad, helicopter);
     }
 
-    private void initFuel() {
-        fuel = 25000;
-        fuelText = new GameText(String.valueOf(fuel));
-        fuelText.setX(helicopter.getCenter().getX() + 13);
-        fuelText.setY(helicopter.getCenter().getY() + 20);
-        fuelText.setFill(Color.YELLOW);
-    }
+
 
     public void reset(){
         getChildren().clear();
@@ -355,12 +348,15 @@ class Helicopter extends Moveable implements Updatable {
     private Point2D heliCenter;
     private final Point2D padCenter;
     private boolean showHelicopter;
+    int fuel;
+    GameText fuelText;
 
-    Helicopter(Point2D padCenter) {
+    Helicopter(Point2D padCenter, int fuel) {
         super();
         heading = 0;
         speed = 0;
         showHelicopter = true;
+        this.fuel = fuel;
         this.padCenter = padCenter;
         heliSize = new Point2D(80, 80);
         heliCenter = new Point2D(heliSize.getX()/2, heliSize.getY()/2);
@@ -370,6 +366,15 @@ class Helicopter extends Moveable implements Updatable {
         centerHeli();
         makeBody();
         makeIndicator();
+        initFuel();
+    }
+
+    private void initFuel() {
+        fuelText = new GameText(String.valueOf(fuel));
+        fuelText.setX(heliCenter.getX() + 13);
+        fuelText.setY(heliCenter.getY() + 20);
+        fuelText.setFill(Color.YELLOW);
+        add(fuelText);
     }
     private void makeHelicopter() {
         helicopter = new Rectangle(heliSize.getX(), heliSize.getY());
@@ -419,17 +424,34 @@ class Helicopter extends Moveable implements Updatable {
 
     @Override
     public void move() {
-        helicopter.setTranslateY(helicopter.getY() + speed);
+        updateHelicopter();
+        fuel -= Math.abs((int) speed * 100); // x100 fuel consumption
         System.out.println("Speed: " + speed);
+        System.out.println("Fuel: " + fuel);
     }
 
+    private void updateHelicopter(){
+        updateY();
+        updateFuel();
+    }
+
+    private void updateY() {
+        helicopter.setTranslateY(helicopter.getTranslateY() + speed);
+        body.setTranslateY(body.getTranslateY() + speed);
+        headingIndicator.setTranslateY(headingIndicator.getTranslateY() + speed);
+    }
+
+    private void updateFuel(){
+        fuelText.setText(String.valueOf(fuel));
+        fuelText.setY(helicopter.getTranslateY() + heliSize.getY());
+    }
 
     public void updateHeading(int update){
         heading -= update;
     }
 
     public void updateSpeed(double s){
-        if(Math.abs(speed) < maxSpeed){
+        if(ignitionOn && Math.abs(speed) < maxSpeed){
             speed += s;
         }
     }
@@ -470,6 +492,10 @@ class GameText extends GameObject {
 
     public void setFill(Color color){
         text.setFill(color);
+    }
+
+    public void setText(String textString){
+        text.setText(textString);
     }
 
     public void setX(double x){
