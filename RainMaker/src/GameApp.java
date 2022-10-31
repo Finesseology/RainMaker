@@ -92,7 +92,7 @@ class Game extends Pane{
         pond = new Pond();
         cloud = new Cloud(gameSize);
         pad = new Helipad();
-        helicopter = new Helicopter();
+        helicopter = new Helicopter(new Point2D(Helipad.getCenter().getX(), Helipad.getCenter().getY()));
 
         fuel = 25000;
 
@@ -301,24 +301,50 @@ class Helipad extends Fixed {
 class Helicopter extends Moveable implements Updatable {
     Circle body;
     Rectangle headingIndicator;
-    private static boolean ignitionOn;
+    Rectangle helicopter;
 
-    Helicopter() {
+
+    private final Point2D heliSize;
+    private static boolean ignitionOn;
+    private Point2D heliCenter;
+    private final Point2D padCenter;
+
+    Helicopter(Point2D padCenter) {
         super();
         heading = 0;
         speed = 0;
+        this.padCenter = padCenter;
+        heliSize = new Point2D(80, 80);
+        heliCenter = new Point2D(heliSize.getX()/2, heliSize.getY()/2);
         ignitionOn = false;
 
+        makeHelicopter();
+        centerHeli();
         makeBody();
         makeIndicator();
+    }
+    private void makeHelicopter() {
+        helicopter = new Rectangle(heliSize.getX(), heliSize.getY());
+        helicopter.setStroke(Color.GREEN);
+        helicopter.setFill(Color.TRANSPARENT);
+        add(helicopter);
+    }
+
+    private void centerHeli() {
+        heliCenter = new Point2D(
+                padCenter.getX() - heliSize.getX()/2,
+                padCenter.getY() - heliSize.getY()/2
+        );
+        helicopter.setX(heliCenter.getX());
+        helicopter.setY(heliCenter.getY());
     }
 
     private void makeIndicator() {
         headingIndicator = new Rectangle(
-                body.getCenterX() - 2.5,
+                body.getCenterX() - 2,
                 body.getCenterY(),
                 5,
-                30
+                40
         );
         headingIndicator.setFill(Color.YELLOW);
         add(headingIndicator);
@@ -326,8 +352,8 @@ class Helicopter extends Moveable implements Updatable {
 
     private void makeBody(){
         body = new Circle(
-                Helipad.getCenter().getX(),
-                Helipad.getCenter().getY(),
+                heliCenter.getX() + heliSize.getX() / 2,
+                heliCenter.getY() + heliSize.getY() / 2,
                 10);
         body.setFill(Color.YELLOW);
         add(body);
@@ -336,6 +362,9 @@ class Helicopter extends Moveable implements Updatable {
     @Override
     public void move() {
 
+    }
+
+    private void updateIndicator(){
     }
 
     public boolean isIgnitionOn() {
