@@ -10,6 +10,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
@@ -34,7 +35,7 @@ public class GameApp extends Application {
         AnimationTimer loop = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                game.run(now);
+                game.run();
             }
         };
         loop.start();
@@ -120,7 +121,7 @@ class Game extends Pane{
         init();
     }
 
-    public void run(long now){
+    public void run(){
         if(Helicopter.isOn()){
             helicopter.move();
         }
@@ -128,7 +129,6 @@ class Game extends Pane{
 
     public void updateHeading(int heading){
         helicopter.updateHeading(heading);
-        System.out.println("Heading: " + helicopter.getHeading());
         helicopter.setRotate(helicopter.getHeading() + heading);
     }
 
@@ -214,26 +214,24 @@ class Cloud extends Fixed {
     private double area;
     private double percentage;
     private Circle circle;
-    private Text text;
+    private GameText text;
 
     public Cloud(Point2D coordinates) {
         super(coordinates);
-        this.saturation = 0;
-        this.percentage = 0;
-        this.radius = 50;
-        this.area = Math.PI * Math.pow(radius, 2);
+        saturation = 0;
+        percentage = 0;
+        radius = 50;
+        area = Math.PI * Math.pow(radius, 2);
 
-        this.circle = new Circle(radius);
-        this.text = new Text();
-        this.text.setTextAlignment(TextAlignment.CENTER);
-        this.text.setText(String.format("%.0f %%", percentage));
-        this.circle.setFill(Color.WHITE);
-        this.circle.setStroke(Color.BLACK);
-        this.circle.setStrokeWidth(2);
-        this.circle.setCenterX(coordinates.getX());
-        this.circle.setCenterY(coordinates.getY());
-        this.text.setX(coordinates.getX() - 10);
-        this.text.setY(coordinates.getY() + 10);
+        circle = new Circle(radius);
+        text = new GameText(String.format("%.0f %%", percentage));
+        circle.setFill(Color.WHITE);
+        circle.setStroke(Color.BLACK);
+        circle.setStrokeWidth(2);
+        circle.setCenterX(coordinates.getX());
+        circle.setCenterY(coordinates.getY());
+        text.setX(coordinates.getX() - 10);
+        text.setY(coordinates.getY() + 10);
 
         add(circle);
         add(text);
@@ -255,7 +253,7 @@ class Pond extends Fixed {
     private double area;
     private double percentage;
     private Circle circle;
-    private Text text;
+    private GameText text;
     private Random random;
 
     static Random rand = new Random();
@@ -265,21 +263,19 @@ class Pond extends Fixed {
 
     public Pond() {
         super(coords);
-        this.percentage = 0;
-        this.radius = 25;
-        this.area = Math.PI * Math.pow(radius, 2);
+        percentage = 0;
+        radius = 25;
+        area = Math.PI * Math.pow(radius, 2);
 
-        this.circle = new Circle(radius);
-        this.text = new Text();
-        this.text.setTextAlignment(TextAlignment.CENTER);
-        this.text.setText(String.format("%.0f %%", percentage));
-        this.circle.setFill(Color.BLUE);
-        this.circle.setStroke(Color.BLACK);
-        this.circle.setStrokeWidth(2);
-        this.circle.setCenterX(coords.getX());
-        this.circle.setCenterY(coords.getY());
-        this.text.setX(coords.getX() - 10);
-        this.text.setY(coords.getY() + 10);
+        circle = new Circle(radius);
+        text = new GameText(String.format("%.0f %%", percentage));
+        circle.setFill(Color.BLUE);
+        circle.setStroke(Color.BLACK);
+        circle.setStrokeWidth(2);
+        circle.setCenterX(coords.getX());
+        circle.setCenterY(coords.getY());
+        text.setX(coords.getX() - 10);
+        text.setY(coords.getY() + 10);
 
         add(circle);
         add(text);
@@ -293,7 +289,6 @@ class Pond extends Fixed {
         return percentage;
     }
 }
-
 
 class Helipad extends Fixed {
     Circle padCircle;
@@ -432,7 +427,6 @@ class Helicopter extends Moveable implements Updatable {
     }
 
     public void updateSpeed(double s){
-        System.out.println("speed: " + speed);
         speed += s;
     }
     public static boolean isOn() {
@@ -451,6 +445,26 @@ class Helicopter extends Moveable implements Updatable {
     public void toggleBoundries() {
         showHelicopter = !showHelicopter;
         drawBoundries();
+    }
+}
+
+class GameText extends GameObject {
+    Text text;
+
+    public GameText(String textString) {
+        text = new Text(textString);
+        text.setScaleY(-1);
+        text.setTextAlignment(TextAlignment.CENTER);
+        text.setFont(Font.font(20));
+        add(text);
+    }
+
+    public void setX(double x){
+        text.setX(x);
+    }
+
+    public void setY(double y){
+        text.setY(y);
     }
 }
 
