@@ -63,6 +63,20 @@ public class GameApp extends Application {
                 if (event.getCode() == KeyCode.DOWN) {
                     game.updateSpeed(-0.1);
                 }
+                // 'i' Turns on the helicopter ignition.
+                if (event.getCode() == KeyCode.I) {
+                    game.toggleIgnition();
+                }
+
+                // 'b' [optional] shows bounding boxes around objects.
+                if (event.getCode() == KeyCode.B) {
+                    game.showBoundries();
+                }
+
+                // 'r' Reinitialize the game
+                if (event.getCode() == KeyCode.R) {
+                    game.reset();
+                }
 
             }
         });
@@ -107,7 +121,9 @@ class Game extends Pane{
     }
 
     public void run(long now){
-        helicopter.move();
+        if(Helicopter.isOn()){
+            helicopter.move();
+        }
     }
 
     public void updateHeading(int heading){
@@ -120,6 +136,15 @@ class Game extends Pane{
         helicopter.updateSpeed(speed);
     }
 
+    public void toggleIgnition() {
+        if(Helicopter.isOn()){
+            Helicopter.toggleIgnition();
+        }
+    }
+
+    public void showBoundries() {
+        helicopter.toggleBoundries();
+    }
 }
 
 interface Updatable {
@@ -325,11 +350,13 @@ class Helicopter extends Moveable implements Updatable {
     private static boolean ignitionOn;
     private Point2D heliCenter;
     private final Point2D padCenter;
+    private boolean showHelicopter;
 
     Helicopter(Point2D padCenter) {
         super();
         heading = 0;
         speed = 0;
+        showHelicopter = true;
         this.padCenter = padCenter;
         heliSize = new Point2D(80, 80);
         heliCenter = new Point2D(heliSize.getX()/2, heliSize.getY()/2);
@@ -342,9 +369,19 @@ class Helicopter extends Moveable implements Updatable {
     }
     private void makeHelicopter() {
         helicopter = new Rectangle(heliSize.getX(), heliSize.getY());
-        helicopter.setStroke(Color.GREEN);
-        helicopter.setFill(Color.TRANSPARENT);
+        drawBoundries();
         add(helicopter);
+    }
+
+    private void drawBoundries(){
+        if(showHelicopter){
+            helicopter.setStroke(Color.GREEN);
+            helicopter.setFill(Color.TRANSPARENT);
+        }
+        else{
+            helicopter.setStroke(Color.TRANSPARENT);
+            helicopter.setFill(Color.TRANSPARENT);
+        }
     }
 
     private void centerHeli() {
@@ -398,7 +435,7 @@ class Helicopter extends Moveable implements Updatable {
         System.out.println("speed: " + speed);
         speed += s;
     }
-    public boolean isIgnitionOn() {
+    public static boolean isOn() {
         return ignitionOn;
     }
 
@@ -410,5 +447,10 @@ class Helicopter extends Moveable implements Updatable {
         return this.heading;
     }
 
+
+    public void toggleBoundries() {
+        showHelicopter = !showHelicopter;
+        drawBoundries();
+    }
 }
 
