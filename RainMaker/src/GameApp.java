@@ -75,6 +75,7 @@ class Game extends Pane{
     private Pond pond;
     private Cloud cloud;
     private Helipad pad;
+    private Helicopter helicopter;
 
     private int fuel;
     private int water;
@@ -91,10 +92,11 @@ class Game extends Pane{
         pond = new Pond();
         cloud = new Cloud(gameSize);
         pad = new Helipad();
+        helicopter = new Helicopter();
 
         fuel = 25000;
 
-        getChildren().addAll(pond, cloud, pad);
+        getChildren().addAll(pond, cloud, pad, helicopter);
     }
 
     public void run(long now){
@@ -149,8 +151,8 @@ abstract class Fixed extends GameObject{
 }
 
 abstract class Moveable extends GameObject{
-    private double direction;
-    private double speed;
+    double heading;
+    double speed;
 
     public Moveable(){
         super();
@@ -269,9 +271,6 @@ class Helipad extends Fixed {
 
         makeCircle();
         makeRectangle();
-
-        add(padCircle);
-        add(padSquare);
     }
 
     private void makeRectangle(){
@@ -283,6 +282,7 @@ class Helipad extends Fixed {
         );
         padSquare.setStroke(Color.YELLOW);
         padSquare.setFill(Color.TRANSPARENT);
+        add(padSquare);
     }
 
     private void makeCircle(){
@@ -290,6 +290,61 @@ class Helipad extends Fixed {
         padCircle.setStroke(Color.GRAY);
         padCircle.setStrokeWidth(2);
         padCircle.setFill(Color.TRANSPARENT);
+        add(padCircle);
     }
+
+    public static Point2D getCenter(){
+        return center;
+    }
+}
+
+class Helicopter extends Moveable implements Updatable {
+    Circle body;
+    Rectangle headingIndicator;
+    private static boolean ignitionOn;
+
+    Helicopter() {
+        super();
+        heading = 0;
+        speed = 0;
+        ignitionOn = false;
+
+        makeBody();
+        makeIndicator();
+    }
+
+    private void makeIndicator() {
+        headingIndicator = new Rectangle(
+                body.getCenterX() - 2.5,
+                body.getCenterY(),
+                5,
+                30
+        );
+        headingIndicator.setFill(Color.YELLOW);
+        add(headingIndicator);
+    }
+
+    private void makeBody(){
+        body = new Circle(
+                Helipad.getCenter().getX(),
+                Helipad.getCenter().getY(),
+                10);
+        body.setFill(Color.YELLOW);
+        add(body);
+    }
+
+    @Override
+    public void move() {
+
+    }
+
+    public boolean isIgnitionOn() {
+        return ignitionOn;
+    }
+
+    public static void toggleIgnition() {
+        ignitionOn = !ignitionOn;
+    }
+
 }
 
