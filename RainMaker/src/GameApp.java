@@ -74,6 +74,7 @@ public class GameApp extends Application {
 class Game extends Pane{
     private Pond pond;
     private Cloud cloud;
+    private Helipad pad;
 
     private int fuel;
     private int water;
@@ -89,10 +90,11 @@ class Game extends Pane{
         System.out.println(gameSize);
         pond = new Pond();
         cloud = new Cloud(gameSize);
+        pad = new Helipad();
 
         fuel = 25000;
 
-        getChildren().addAll(pond, cloud);
+        getChildren().addAll(pond, cloud, pad);
     }
 
     public void run(long now){
@@ -249,5 +251,45 @@ class Pond extends Fixed {
 }
 
 
+class Helipad extends Fixed {
+    Circle padCircle;
+    Rectangle padSquare;
+    private final int radius;
+    private final Point2D padSize;
 
+    private static final Point2D center = new Point2D(
+            GameApp.windowSize.getX() / 2,
+            GameApp.windowSize.getY() / 8);
+
+    public Helipad() {
+        super();
+        padSize = new Point2D(100, 100);
+        int circlePadding = 10;
+        radius = (int) (padSize.getX() / 2 - circlePadding);
+
+        makeCircle();
+        makeRectangle();
+
+        add(padCircle);
+        add(padSquare);
+    }
+
+    private void makeRectangle(){
+        padSquare = new Rectangle(
+                center.getX() - padSize.getX() / 2,
+                center.getY() - padSize.getY() / 2,
+                padSize.getX(),
+                padSize.getY()
+        );
+        padSquare.setStroke(Color.YELLOW);
+        padSquare.setFill(Color.TRANSPARENT);
+    }
+
+    private void makeCircle(){
+        padCircle = new Circle(center.getX(), center.getY(), radius);
+        padCircle.setStroke(Color.GRAY);
+        padCircle.setStrokeWidth(2);
+        padCircle.setFill(Color.TRANSPARENT);
+    }
+}
 
