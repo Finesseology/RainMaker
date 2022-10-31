@@ -91,6 +91,7 @@ class Game extends Pane{
     private Cloud cloud;
     private Helipad pad;
     private Helicopter helicopter;
+    GameText fuelText;
 
     private int fuel;
     private int water;
@@ -110,12 +111,21 @@ class Game extends Pane{
         pond = new Pond();
         cloud = new Cloud(gameSize);
         pad = new Helipad();
-        helicopter = new Helicopter(new Point2D(Helipad.getCenter().getX(), Helipad.getCenter().getY()));
+        helicopter = new Helicopter(new Point2D(Helipad.getCenter().getX(),
+                Helipad.getCenter().getY()));
+        initFuel();
 
-        fuel = 25000;
-
-        getChildren().addAll(pond, cloud, pad, helicopter);
+        getChildren().addAll(pond, cloud, pad, helicopter, fuelText);
     }
+
+    private void initFuel() {
+        fuel = 25000;
+        fuelText = new GameText(String.valueOf(fuel));
+        fuelText.setX(helicopter.getCenter().getX() + 13);
+        fuelText.setY(helicopter.getCenter().getY() + 20);
+        fuelText.setFill(Color.YELLOW);
+    }
+
     public void reset(){
         getChildren().clear();
         init();
@@ -137,9 +147,7 @@ class Game extends Pane{
     }
 
     public void toggleIgnition() {
-        if(Helicopter.isOn()){
-            Helicopter.toggleIgnition();
-        }
+        Helicopter.toggleIgnition();
     }
 
     public void showBoundries() {
@@ -339,6 +347,7 @@ class Helicopter extends Moveable implements Updatable {
     Circle body;
     Rectangle headingIndicator;
     Rectangle helicopter;
+    int maxSpeed = 10;
 
 
     private final Point2D heliSize;
@@ -410,24 +419,19 @@ class Helicopter extends Moveable implements Updatable {
 
     @Override
     public void move() {
-        //helicopter.setRotate(heading);
+        helicopter.setTranslateY(helicopter.getY() + speed);
+        System.out.println("Speed: " + speed);
     }
 
-    private void turn(){
-        headingIndicator = new Rectangle(
-                body.getCenterX() - 2 + heading,
-                body.getCenterY() + heading,
-                5,
-                40
-        );
-    }
 
     public void updateHeading(int update){
         heading -= update;
     }
 
     public void updateSpeed(double s){
-        speed += s;
+        if(Math.abs(speed) < maxSpeed){
+            speed += s;
+        }
     }
     public static boolean isOn() {
         return ignitionOn;
@@ -435,6 +439,7 @@ class Helicopter extends Moveable implements Updatable {
 
     public static void toggleIgnition() {
         ignitionOn = !ignitionOn;
+        System.out.println("Ignition on: " + ignitionOn);
     }
 
     public double getHeading(){
@@ -445,6 +450,10 @@ class Helicopter extends Moveable implements Updatable {
     public void toggleBoundries() {
         showHelicopter = !showHelicopter;
         drawBoundries();
+    }
+
+    public Point2D getCenter(){
+        return heliCenter;
     }
 }
 
@@ -459,6 +468,10 @@ class GameText extends GameObject {
         add(text);
     }
 
+    public void setFill(Color color){
+        text.setFill(color);
+    }
+
     public void setX(double x){
         text.setX(x);
     }
@@ -466,5 +479,6 @@ class GameText extends GameObject {
     public void setY(double y){
         text.setY(y);
     }
+
 }
 
