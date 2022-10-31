@@ -8,6 +8,10 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 
@@ -23,20 +27,19 @@ public class GameApp extends Application {
     }
 
     public void start(Stage stage) {
-        Pane root = new Pane();
-        init(root);
-        Scene scene = new Scene(root, windowSize.getX(), windowSize.getY(), Color.BLACK);
+        Game game = new Game();
+        Scene scene = new Scene(game, windowSize.getX(), windowSize.getY(), Color.BLACK);
 
         //start game loop
         AnimationTimer loop = new AnimationTimer() {
             @Override
             public void handle(long now) {
-
+                game.run(now);
             }
         };
         loop.start();
 
-        root.setScaleY(-1);
+        game.setScaleY(-1);
         stage.setScene(scene);
         stage.setTitle("RainMaker");
         stage.setResizable(false);
@@ -65,16 +68,36 @@ public class GameApp extends Application {
         });
     }
 
-    private static void init(Pane root) {
-
-
-        root.getChildren().clear();
-
-    }
 
 }
 
 class Game extends Pane{
+    private Pond pond;
+    private Cloud cloud;
+
+    private int fuel;
+    private int water;
+    private int score;
+    private int time;
+    Random rand = new Random();
+    Point2D gameSize = new Point2D(rand.nextInt((int) GameApp.windowSize.getX()),
+                rand.ints((int) (GameApp.windowSize.getY() / 3),
+                        (int) GameApp.windowSize.getY()).findFirst().getAsInt());
+
+
+    Game(){
+        System.out.println(gameSize);
+        pond = new Pond();
+        cloud = new Cloud(gameSize);
+
+        fuel = 25000;
+
+        getChildren().addAll(pond, cloud);
+    }
+
+    public void run(long now){
+
+    }
 
 }
 
@@ -112,6 +135,119 @@ abstract class GameObject extends Group {
         this.getChildren().add(node);
     }
 }
+
+abstract class Fixed extends GameObject{
+    public Fixed(){
+        super();
+    }
+
+    public Fixed(Point2D coords){
+        super(coords);
+    }
+}
+
+abstract class Moveable extends GameObject{
+    private double direction;
+    private double speed;
+
+    public Moveable(){
+        super();
+    }
+
+    public Moveable(Point2D coords){
+        super(coords);
+    }
+
+    public abstract void move();
+}
+
+class Cloud extends Fixed {
+
+    private double saturation;
+    private double radius;
+    private double area;
+    private double percentage;
+    private Circle circle;
+    private Text text;
+
+    public Cloud(Point2D coordinates) {
+        super(coordinates);
+        this.saturation = 0;
+        this.percentage = 0;
+        this.radius = 50;
+        this.area = Math.PI * Math.pow(radius, 2);
+
+        this.circle = new Circle(radius);
+        this.text = new Text();
+        this.text.setTextAlignment(TextAlignment.CENTER);
+        this.text.setText(String.format("%.0f %%", percentage));
+        this.circle.setFill(Color.WHITE);
+        this.circle.setStroke(Color.BLACK);
+        this.circle.setStrokeWidth(2);
+        this.circle.setCenterX(coordinates.getX());
+        this.circle.setCenterY(coordinates.getY());
+        this.text.setX(coordinates.getX() - 10);
+        this.text.setY(coordinates.getY() + 10);
+
+        add(circle);
+        add(text);
+    }
+
+    public double getArea() {
+        return area;
+    }
+
+    public double getPercentage() {
+        return percentage;
+    }
+}
+
+
+class Pond extends Fixed {
+
+    private double radius;
+    private double area;
+    private double percentage;
+    private Circle circle;
+    private Text text;
+    private Random random;
+
+    static Random rand = new Random();
+    static Point2D coords = new Point2D(rand.nextInt((int) GameApp.windowSize.getX()),
+            rand.ints((int) (GameApp.windowSize.getY() / 3),
+                    (int) GameApp.windowSize.getY()).findFirst().getAsInt());
+
+    public Pond() {
+        super(coords);
+        this.percentage = 0;
+        this.radius = 25;
+        this.area = Math.PI * Math.pow(radius, 2);
+
+        this.circle = new Circle(radius);
+        this.text = new Text();
+        this.text.setTextAlignment(TextAlignment.CENTER);
+        this.text.setText(String.format("%.0f %%", percentage));
+        this.circle.setFill(Color.BLUE);
+        this.circle.setStroke(Color.BLACK);
+        this.circle.setStrokeWidth(2);
+        this.circle.setCenterX(coords.getX());
+        this.circle.setCenterY(coords.getY());
+        this.text.setX(coords.getX() - 10);
+        this.text.setY(coords.getY() + 10);
+
+        add(circle);
+        add(text);
+    }
+
+    public double getArea() {
+        return area;
+    }
+
+    public double getPercentage() {
+        return percentage;
+    }
+}
+
 
 
 
