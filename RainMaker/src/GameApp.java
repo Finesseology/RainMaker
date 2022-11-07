@@ -95,7 +95,6 @@ class Game extends Pane{
         }
         if(Helicopter.isOn()){
             helicopter.move();
-            helicopter.translate(0, helicopter.getSpeed());
             helicopter.update();
         }
     }
@@ -198,7 +197,6 @@ abstract class GameObject extends Group {
 
 
     public void update() {
-
         this.getTransforms().clear();
         this.getTransforms().addAll(myTranslation);
     }
@@ -449,8 +447,7 @@ class Helicopter extends Moveable implements Updatable {
 
     @Override
     public void move() {
-        //this.translate(this.getTranslateX() + speed, this.getTranslateY() + speed);
-        //this.getTransforms().clear();
+        this.translate(0, speed);
         updateFuel();
     }
 
