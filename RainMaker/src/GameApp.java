@@ -49,36 +49,15 @@ public class GameApp extends Application {
         scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
-                if (event.getCode() == KeyCode.LEFT) {
-                    game.updateHeading(-15);
+                switch (event.getCode()) {
+                    case LEFT -> game.updateHeading(-15);
+                    case RIGHT -> game.updateHeading(15);
+                    case UP -> game.updateSpeed(0.1);
+                    case DOWN -> game.updateSpeed(-0.1);
+                    case I -> game.toggleIgnition();
+                    case B -> game.showBoundries();
+                    case R -> game.reset();
                 }
-
-                if (event.getCode() == KeyCode.RIGHT) {
-                    game.updateHeading(15);
-                }
-
-                if (event.getCode() == KeyCode.UP) {
-                    game.updateSpeed(0.1);
-                }
-
-                if (event.getCode() == KeyCode.DOWN) {
-                    game.updateSpeed(-0.1);
-                }
-                // 'i' Turns on the helicopter ignition.
-                if (event.getCode() == KeyCode.I) {
-                    game.toggleIgnition();
-                }
-
-                // 'b' [optional] shows bounding boxes around objects.
-                if (event.getCode() == KeyCode.B) {
-                    game.showBoundries();
-                }
-
-                // 'r' Reinitialize the game
-                if (event.getCode() == KeyCode.R) {
-                    game.reset();
-                }
-
             }
         });
     }
@@ -125,6 +104,9 @@ class Game extends Pane{
     }
 
     public void run(){
+        if(helicopter.getFuel() <= 0){
+            reset();
+        }
         if(Helicopter.isOn()){
             helicopter.move();
         }
@@ -425,9 +407,6 @@ class Helicopter extends Moveable implements Updatable {
     @Override
     public void move() {
         updateHelicopter();
-        fuel -= Math.abs((int) speed * 100); // x100 fuel consumption
-        System.out.println("Speed: " + speed);
-        System.out.println("Fuel: " + fuel);
     }
 
     private void updateHelicopter(){
@@ -442,6 +421,7 @@ class Helicopter extends Moveable implements Updatable {
     }
 
     private void updateFuel(){
+        fuel -= Math.abs((int) speed * 100); // x100 fuel consumption
         fuelText.setText(String.valueOf(fuel));
         fuelText.setY(helicopter.getTranslateY() + heliSize.getY());
     }
@@ -474,8 +454,8 @@ class Helicopter extends Moveable implements Updatable {
         drawBoundries();
     }
 
-    public Point2D getCenter(){
-        return heliCenter;
+    public int getFuel(){
+        return fuel;
     }
 }
 
