@@ -90,15 +90,16 @@ class Game extends Pane{
     }
 
     public void init(){
-        pond = new Pond();
-        cloud = new Cloud(gameSize);
-        pad = new Helipad();
         helicopter = new Helicopter(new Point2D(Helipad.getCenter().getX(),
                 Helipad.getCenter().getY()), fuel);
 
         gameSize = new Point2D(rand.nextInt((int) GameApp.windowSize.getX()),
                 rand.ints((int) (GameApp.windowSize.getY() / 3),
-                        (int) GameApp.windowSize.getY()).findFirst().getAsInt());
+                    (int) GameApp.windowSize.getY()).findFirst().getAsInt());
+
+        pond = new Pond();
+        cloud = new Cloud(gameSize);
+        pad = new Helipad();
 
         getChildren().addAll(pond, cloud, pad, helicopter);
     }
@@ -121,7 +122,8 @@ class Game extends Pane{
 
     public void updateHeading(int heading){
         helicopter.updateHeading(heading);
-        helicopter.setRotate(helicopter.getHeading() + heading);
+        //helicopter.setRotate(helicopter.getHeading() + heading);
+        helicopter.rotate(helicopter.getHeading() + heading);
     }
 
     public void updateSpeed(double speed){
@@ -142,14 +144,43 @@ interface Updatable {
 }
 
 abstract class GameObject extends Group {
+    protected Translate myTranslation;
+    protected Rotate myRotation;
+    protected Scale myScale;
     private Point2D coords;
 
     public GameObject(){
-
+        myTranslation = new Translate();
+        myRotation = new Rotate();
+        myScale = new Scale();
     }
 
     public GameObject(Point2D coords){
+        myTranslation = new Translate();
+        myRotation = new Rotate();
+        myScale = new Scale();
         this.coords = coords;
+    }
+
+
+    public void rotate(double degrees) {
+        myRotation.setAngle(degrees);
+        myRotation.setPivotX(0);
+        myRotation.setPivotY(0);
+    }
+
+    public void scale(double sx, double sy) {
+        myScale.setX(sx);
+        myScale.setY(sy);
+    }
+
+    public void translate(double tx, double ty) {
+        myTranslation.setX(tx);
+        myTranslation.setY(ty);
+    }
+
+    public double getMyRotation(){
+        return myRotation.getAngle();
     }
 
     public Point2D getCoords(){
@@ -467,43 +498,15 @@ class Helicopter extends Moveable implements Updatable {
 }
 
 class GameText extends GameObject {
-    protected Translate myTranslation;
-    protected Rotate myRotation;
-    protected Scale myScale;
-
     Text text;
 
     public GameText(String textString) {
-        myTranslation = new Translate();
-        myRotation = new Rotate();
-        myScale = new Scale();
-
         text = new Text(textString);
         text.setScaleY(-1);
         text.setTextAlignment(TextAlignment.CENTER);
         text.setFont(Font.font(20));
         add(text);
         this.getTransforms().addAll(myTranslation,myRotation,myScale);
-    }
-
-    public void rotate(double degrees) {
-        myRotation.setAngle(degrees);
-        myRotation.setPivotX(0);
-        myRotation.setPivotY(0);
-    }
-
-    public void scale(double sx, double sy) {
-        myScale.setX(sx);
-        myScale.setY(sy);
-    }
-
-    public void translate(double tx, double ty) {
-        myTranslation.setX(tx);
-        myTranslation.setY(ty);
-    }
-
-    public double getMyRotation(){
-        return myRotation.getAngle();
     }
 
     public void setFill(Color color){
