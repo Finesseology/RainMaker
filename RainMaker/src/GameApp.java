@@ -13,6 +13,9 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
+import javafx.scene.transform.Rotate;
+import javafx.scene.transform.Scale;
+import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 
@@ -464,14 +467,43 @@ class Helicopter extends Moveable implements Updatable {
 }
 
 class GameText extends GameObject {
+    protected Translate myTranslation;
+    protected Rotate myRotation;
+    protected Scale myScale;
+
     Text text;
 
     public GameText(String textString) {
+        myTranslation = new Translate();
+        myRotation = new Rotate();
+        myScale = new Scale();
+
         text = new Text(textString);
         text.setScaleY(-1);
         text.setTextAlignment(TextAlignment.CENTER);
         text.setFont(Font.font(20));
         add(text);
+        this.getTransforms().addAll(myTranslation,myRotation,myScale);
+    }
+
+    public void rotate(double degrees) {
+        myRotation.setAngle(degrees);
+        myRotation.setPivotX(0);
+        myRotation.setPivotY(0);
+    }
+
+    public void scale(double sx, double sy) {
+        myScale.setX(sx);
+        myScale.setY(sy);
+    }
+
+    public void translate(double tx, double ty) {
+        myTranslation.setX(tx);
+        myTranslation.setY(ty);
+    }
+
+    public double getMyRotation(){
+        return myRotation.getAngle();
     }
 
     public void setFill(Color color){
