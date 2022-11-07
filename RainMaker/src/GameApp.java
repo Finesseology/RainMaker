@@ -4,7 +4,6 @@ import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -124,13 +123,13 @@ class Game extends Pane{
 
     public void left(){
         helicopter.updateHeading(-degreesToRotate);
-        helicopter.rotate(helicopter.getMyRotation() - degreesToRotate);
+        helicopter.myRotate(helicopter.getMyRotation() - degreesToRotate);
         helicopter.update();
     }
 
     public void right(){
         helicopter.updateHeading(degreesToRotate);
-        helicopter.rotate(helicopter.getMyRotation() + degreesToRotate);
+        helicopter.myRotate(helicopter.getMyRotation() + degreesToRotate);
         helicopter.update();
     }
 
@@ -171,7 +170,7 @@ abstract class GameObject extends Group {
     }
 
 
-    public void rotate(double degrees) {
+    public void myRotate(double degrees) {
         this.myRotation.setAngle(degrees);
         this.myRotation.setPivotX(0);
         this.myRotation.setPivotY(0);
@@ -183,7 +182,7 @@ abstract class GameObject extends Group {
         myScale.setY(sy);
     }
 
-    public void translate(double tx, double ty) {
+    public void myTranslate(double tx, double ty) {
         myTranslation.setX(tx);
         myTranslation.setY(ty);
     }
@@ -453,10 +452,6 @@ class Helicopter extends Moveable implements Updatable {
 
     @Override
     public void move() {
-        updateHelicopter();
-    }
-
-    private void updateHelicopter(){
         updateY();
         updateFuel();
     }
