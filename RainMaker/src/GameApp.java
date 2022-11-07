@@ -122,25 +122,14 @@ class Game extends Pane{
         }
     }
 
-    public void updateHeading(int heading){
-        helicopter.updateHeading(heading);
-        //helicopter.setRotate(helicopter.getHeading() + heading);
-        helicopter.rotate(helicopter.getMyRotation() + heading);
-        helicopter.update();
-    }
-
     public void left(){
-        System.out.println("Left");
         helicopter.updateHeading(-degreesToRotate);
-        //helicopter.setRotate(helicopter.getHeading() + heading);
         helicopter.rotate(helicopter.getMyRotation() - degreesToRotate);
         helicopter.update();
     }
 
     public void right(){
-        System.out.println("Right");
         helicopter.updateHeading(degreesToRotate);
-        //helicopter.setRotate(helicopter.getHeading() + heading);
         helicopter.rotate(helicopter.getMyRotation() + degreesToRotate);
         helicopter.update();
     }
@@ -183,9 +172,10 @@ abstract class GameObject extends Group {
 
 
     public void rotate(double degrees) {
-        myRotation.setAngle(degrees);
-        myRotation.setPivotX(0);
-        myRotation.setPivotY(0);
+        this.myRotation.setAngle(degrees);
+        this.myRotation.setPivotX(0);
+        this.myRotation.setPivotY(0);
+        this.setRotate(-degrees);
     }
 
     public void scale(double sx, double sy) {
