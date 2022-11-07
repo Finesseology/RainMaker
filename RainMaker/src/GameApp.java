@@ -95,10 +95,7 @@ class Game extends Pane{
         }
         if(Helicopter.isOn()){
             helicopter.move();
-
-            helicopter.translate(helicopter.getSpeed(), helicopter.getSpeed());
-            System.out.println("\nspeed: " + helicopter.getSpeed());
-
+            helicopter.translate(0, helicopter.getSpeed());
             helicopter.update();
         }
     }
@@ -187,11 +184,6 @@ abstract class GameObject extends Group {
     }
 
     public void translate(double tx, double ty) {
-        System.out.println("tx: " + tx + " ty " + ty);
-        System.out.println("getX: " + myTranslation.getX()
-                + " getY " + myTranslation.getY());
-        //myTranslation.setX(tx);
-        //myTranslation.setY(ty);
         myTranslation.setX(myTranslation.getX() + tx);
         myTranslation.setY(myTranslation.getY() + ty);
     }
