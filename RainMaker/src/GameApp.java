@@ -77,8 +77,6 @@ class Game extends Pane{
 
 
     Game(){
-        fuel = 25000;
-        degreesToRotate = 15;
         init();
 
         //start game loop
@@ -91,7 +89,23 @@ class Game extends Pane{
         loop.start();
     }
 
-    public void init(){
+    private void run(){
+        if(helicopter.getFuel() <= 0){
+            reset();
+        }
+        if(Helicopter.isOn()){
+            helicopter.move();
+
+            helicopter.translate(helicopter.getSpeed(), helicopter.getSpeed());
+            System.out.println("\nspeed: " + helicopter.getSpeed());
+
+            helicopter.update();
+        }
+    }
+
+    private void init(){
+        fuel = 25000;
+        degreesToRotate = 15;
         helicopter = new Helicopter(new Point2D(Helipad.getCenter().getX(),
                 Helipad.getCenter().getY()), fuel);
 
@@ -106,31 +120,20 @@ class Game extends Pane{
         getChildren().addAll(pond, cloud, pad, helicopter);
     }
 
-
-
     public void reset(){
         getChildren().clear();
         init();
     }
 
-    public void run(){
-        if(helicopter.getFuel() <= 0){
-            reset();
-        }
-        if(Helicopter.isOn()){
-            helicopter.move();
-        }
-    }
-
     public void left(){
         helicopter.updateHeading(-degreesToRotate);
-        helicopter.myRotate(helicopter.getMyRotation() - degreesToRotate);
+        helicopter.rotate(helicopter.getMyRotation() - degreesToRotate);
         helicopter.update();
     }
 
     public void right(){
         helicopter.updateHeading(degreesToRotate);
-        helicopter.myRotate(helicopter.getMyRotation() + degreesToRotate);
+        helicopter.rotate(helicopter.getMyRotation() + degreesToRotate);
         helicopter.update();
     }
 
@@ -171,11 +174,11 @@ abstract class GameObject extends Group {
     }
 
 
-    public void myRotate(double degrees) {
-        this.myRotation.setAngle(degrees);
-        this.myRotation.setPivotX(0);
-        this.myRotation.setPivotY(0);
-        this.setRotate(-degrees);
+    public void rotate(double degrees) {
+        myRotation.setAngle(degrees);
+        myRotation.setPivotX(0);
+        myRotation.setPivotY(0);
+        setRotate(-degrees);
     }
 
     public void scale(double sx, double sy) {
@@ -183,9 +186,14 @@ abstract class GameObject extends Group {
         myScale.setY(sy);
     }
 
-    public void myTranslate(double tx, double ty) {
-        myTranslation.setX(tx);
-        myTranslation.setY(ty);
+    public void translate(double tx, double ty) {
+        System.out.println("tx: " + tx + " ty " + ty);
+        System.out.println("getX: " + myTranslation.getX()
+                + " getY " + myTranslation.getY());
+        //myTranslation.setX(tx);
+        //myTranslation.setY(ty);
+        myTranslation.setX(myTranslation.getX() + tx);
+        myTranslation.setY(myTranslation.getY() + ty);
     }
 
     public double getMyRotation(){
@@ -196,15 +204,11 @@ abstract class GameObject extends Group {
         return coords;
     }
 
-    public void setCoords(Point2D coords){
-        this.coords = coords;
-    }
 
     public void update() {
-        for (Node n : getChildren()) {
-            if (n instanceof Updatable)
-                ((Updatable) n).update();
-        }
+
+        this.getTransforms().clear();
+        this.getTransforms().addAll(myTranslation);
     }
 
     void add(Node node) {
@@ -453,14 +457,9 @@ class Helicopter extends Moveable implements Updatable {
 
     @Override
     public void move() {
-        updateY();
+        //this.translate(this.getTranslateX() + speed, this.getTranslateY() + speed);
+        //this.getTransforms().clear();
         updateFuel();
-    }
-
-    private void updateY() {
-        helicopter.setTranslateY(helicopter.getTranslateY() + speed);
-        body.setTranslateY(body.getTranslateY() + speed);
-        headingIndicator.setTranslateY(headingIndicator.getTranslateY() + speed);
     }
 
     private void updateFuel(){
@@ -499,6 +498,10 @@ class Helicopter extends Moveable implements Updatable {
 
     public int getFuel(){
         return fuel;
+    }
+
+    public double getSpeed(){
+        return speed;
     }
 }
 
