@@ -33,14 +33,6 @@ public class GameApp extends Application {
         Game game = new Game();
         Scene scene = new Scene(game, windowSize.getX(), windowSize.getY(), Color.BLACK);
 
-        //start game loop
-        AnimationTimer loop = new AnimationTimer() {
-            @Override
-            public void handle(long now) {
-                game.run();
-            }
-        };
-        loop.start();
 
         game.setScaleY(-1);
         stage.setScene(scene);
@@ -88,6 +80,15 @@ class Game extends Pane{
         fuel = 25000;
         degreesToRotate = 15;
         init();
+
+        //start game loop
+        AnimationTimer loop = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                run();
+            }
+        };
+        loop.start();
     }
 
     public void init(){
