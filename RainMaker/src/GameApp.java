@@ -9,6 +9,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
@@ -51,6 +52,7 @@ public class GameApp extends Application {
                     case I -> game.toggleIgnition();
                     case B -> game.showBoundries();
                     case R -> game.reset();
+                    case SPACE -> game.saturateCloud();
                 }
             }
         });
@@ -144,6 +146,14 @@ class Game extends Pane{
     public void showBoundries() {
         helicopter.toggleBoundries();
     }
+
+    public void saturateCloud() {
+        //if over cloud
+        cloud.saturate();
+        if(cloud.getSaturation() <= 30){
+            //pond.fillPond(cloud.getSaturation());
+        }
+    }
 }
 
 interface Updatable {
@@ -234,21 +244,21 @@ abstract class Moveable extends GameObject{
 class Cloud extends Fixed {
 
     private double saturation;
+    private Color color;
     private double radius;
     private double area;
-    private double percentage;
     private Circle circle;
     private GameText text;
 
     public Cloud(Point2D coords) {
         super(coords);
         saturation = 0;
-        percentage = 0;
         radius = 50;
         area = Math.PI * Math.pow(radius, 2);
 
         circle = new Circle(radius);
-        text = new GameText(String.format("%.0f %%", percentage));
+        text = new GameText(String.format("%.0f %%", saturation));
+        color = Color.rgb(255, 255, 255);
         circle.setFill(Color.WHITE);
         circle.setStroke(Color.BLACK);
         circle.setStrokeWidth(2);
@@ -265,8 +275,33 @@ class Cloud extends Fixed {
         return area;
     }
 
-    public double getPercentage() {
-        return percentage;
+    public double getSaturation(){
+        return saturation;
+    }
+
+
+    public void saturate() {
+        if(saturation < 100){
+            saturation += 1;
+            text.setText(String.format("%.0f %%", saturation));
+            desaturate();
+        }
+
+        /*
+        if(saturation >= 100){
+            System.out.println(String.format("rgba(%d, %d, %d, %f)",
+                    (int) (255 * color.getRed()),
+                    (int) (255 * color.getGreen()),
+                    (int) (255 * color.getBlue()),
+                    color.getOpacity()
+            ));
+        }
+         */
+    }
+
+    private void desaturate() {
+        color = Color.rgb((int) (255 - saturation), (int) (255 - saturation), (int) (255 - saturation));
+        circle.setFill(color);
     }
 }
 
@@ -305,13 +340,6 @@ class Pond extends Fixed {
         add(text);
     }
 
-    public double getArea() {
-        return area;
-    }
-
-    public double getPercentage() {
-        return percentage;
-    }
 }
 
 class Helipad extends Fixed {
