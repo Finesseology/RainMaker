@@ -93,6 +93,10 @@ class Game extends Pane{
         helicopter = new Helicopter(new Point2D(Helipad.getCenter().getX(),
                 Helipad.getCenter().getY()), fuel);
 
+        gameSize = new Point2D(rand.nextInt((int) GameApp.windowSize.getX()),
+                rand.ints((int) (GameApp.windowSize.getY() / 3),
+                        (int) GameApp.windowSize.getY()).findFirst().getAsInt());
+
         getChildren().addAll(pond, cloud, pad, helicopter);
     }
 
@@ -199,8 +203,8 @@ class Cloud extends Fixed {
     private Circle circle;
     private GameText text;
 
-    public Cloud(Point2D coordinates) {
-        super(coordinates);
+    public Cloud(Point2D coords) {
+        super(coords);
         saturation = 0;
         percentage = 0;
         radius = 50;
@@ -211,10 +215,10 @@ class Cloud extends Fixed {
         circle.setFill(Color.WHITE);
         circle.setStroke(Color.BLACK);
         circle.setStrokeWidth(2);
-        circle.setCenterX(coordinates.getX());
-        circle.setCenterY(coordinates.getY());
-        text.setX(coordinates.getX() - 10);
-        text.setY(coordinates.getY() + 10);
+        circle.setCenterX(coords.getX());
+        circle.setCenterY(coords.getY());
+        text.setX(coords.getX() - 10);
+        text.setY(coords.getY() + 10);
 
         add(circle);
         add(text);
