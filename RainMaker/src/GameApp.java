@@ -53,8 +53,8 @@ public class GameApp extends Application {
             @Override
             public void handle(KeyEvent event) {
                 switch (event.getCode()) {
-                    case LEFT -> game.updateHeading(-15);
-                    case RIGHT -> game.updateHeading(15);
+                    case LEFT -> game.left();
+                    case RIGHT -> game.right();
                     case UP -> game.updateSpeed(0.1);
                     case DOWN -> game.updateSpeed(-0.1);
                     case I -> game.toggleIgnition();
@@ -78,6 +78,7 @@ class Game extends Pane{
     private int water;
     private int score;
     private int time;
+    private int degreesToRotate;
     Random rand = new Random();
     Point2D gameSize = new Point2D(rand.nextInt((int) GameApp.windowSize.getX()),
                 rand.ints((int) (GameApp.windowSize.getY() / 3),
@@ -86,6 +87,7 @@ class Game extends Pane{
 
     Game(){
         fuel = 25000;
+        degreesToRotate = 15;
         init();
     }
 
@@ -123,7 +125,24 @@ class Game extends Pane{
     public void updateHeading(int heading){
         helicopter.updateHeading(heading);
         //helicopter.setRotate(helicopter.getHeading() + heading);
-        helicopter.rotate(helicopter.getHeading() + heading);
+        helicopter.rotate(helicopter.getMyRotation() + heading);
+        helicopter.update();
+    }
+
+    public void left(){
+        System.out.println("Left");
+        helicopter.updateHeading(-degreesToRotate);
+        //helicopter.setRotate(helicopter.getHeading() + heading);
+        helicopter.rotate(helicopter.getMyRotation() - degreesToRotate);
+        helicopter.update();
+    }
+
+    public void right(){
+        System.out.println("Right");
+        helicopter.updateHeading(degreesToRotate);
+        //helicopter.setRotate(helicopter.getHeading() + heading);
+        helicopter.rotate(helicopter.getMyRotation() + degreesToRotate);
+        helicopter.update();
     }
 
     public void updateSpeed(double speed){
@@ -459,7 +478,7 @@ class Helicopter extends Moveable implements Updatable {
     }
 
     private void updateFuel(){
-        fuel -= Math.abs((int) speed * 100); // x100 fuel consumption
+        fuel -= Math.abs(speed * 25); // x25 fuel consumption
         fuelText.setText(String.valueOf(fuel));
         fuelText.setY(helicopter.getTranslateY() + heliSize.getY());
     }
