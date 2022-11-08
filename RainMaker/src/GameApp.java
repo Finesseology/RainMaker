@@ -277,6 +277,7 @@ class Cloud extends Fixed {
         circle.setStrokeWidth(2);
         circle.setCenterX(coords.getX());
         circle.setCenterY(coords.getY());
+        text.setFill(Color.BLUE);
         text.setX(coords.getX() - 10);
         text.setY(coords.getY() + 10);
 
@@ -348,6 +349,7 @@ class Pond extends Fixed {
         circle.setStrokeWidth(2);
         circle.setCenterX(coords.getX());
         circle.setCenterY(coords.getY());
+        text.setFill(Color.WHITE);
         text.setX(coords.getX() - 10);
         text.setY(coords.getY() + 10);
 
