@@ -9,6 +9,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
@@ -154,11 +155,15 @@ class Game extends Pane{
 
     public void saturateCloud() {
         //if over cloud
-        System.out.print("\nCloud: " + cloud.getSaturation());
-        if(cloud.getSaturation() < 100){
-            cloud.saturate();
-            if(cloud.getSaturation() >= 30){
-                pond.fillPond(cloud.getSaturation() * .05); //5% of sat
+        if(Helicopter.isOn()) {
+            if (!Shape.intersect(helicopter.helicopter, cloud.circle).getBoundsInLocal().isEmpty()) {
+                System.out.print("\nCloud: " + cloud.getSaturation());
+                if (cloud.getSaturation() < 100) {
+                    cloud.saturate();
+                    if (cloud.getSaturation() >= 30) {
+                        pond.fillPond(cloud.getSaturation() * .05); //5% of sat
+                    }
+                }
             }
         }
     }
@@ -255,7 +260,7 @@ class Cloud extends Fixed {
     private Color color;
     private double radius;
     private double area;
-    private final Circle circle;
+    final Circle circle;
     private final GameText text;
 
     public Cloud(Point2D coords) {
