@@ -18,12 +18,11 @@ import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
-
 import java.util.Random;
 
 
 public class GameApp extends Application {
-    static final Point2D windowSize = new Point2D(600, 800);
+    static final Point2D windowSize = new Point2D(400, 800);
 
 
     public static void main(String[] args) {
@@ -50,7 +49,7 @@ public class GameApp extends Application {
                     case UP -> game.updateSpeed(0.1);
                     case DOWN -> game.updateSpeed(-0.1);
                     case I -> game.toggleIgnition();
-                    case B -> game.showBoundries();
+                    case B -> game.showBoundaries();
                     case R -> game.reset();
                     case SPACE -> game.saturateCloud();
                 }
@@ -64,13 +63,8 @@ public class GameApp extends Application {
 class Game extends Pane{
     private Pond pond;
     private Cloud cloud;
-    private Helipad pad;
     private Helicopter helicopter;
 
-    private int fuel;
-    private int water;
-    private int score;
-    private int time;
     private int frames;
     private int degreesToRotate;
     Random rand = new Random();
@@ -81,7 +75,6 @@ class Game extends Pane{
 
     Game(){
         init();
-
         //start game loop
         AnimationTimer loop = new AnimationTimer() {
             @Override
@@ -107,7 +100,7 @@ class Game extends Pane{
     }
 
     private void init(){
-        fuel = 25000;
+        int fuel = 25000;
         degreesToRotate = 15;
         frames = 0;
         helicopter = new Helicopter(new Point2D(Helipad.getCenter().getX(),
@@ -115,11 +108,11 @@ class Game extends Pane{
 
         gameSize = new Point2D(rand.nextInt((int) GameApp.windowSize.getX()),
                 rand.ints((int) (GameApp.windowSize.getY() / 3),
-                        (int) GameApp.windowSize.getY()).findFirst().getAsInt());
+                (int) GameApp.windowSize.getY()).findFirst().getAsInt());
 
         pond = new Pond();
         cloud = new Cloud(gameSize);
-        pad = new Helipad();
+        Helipad pad = new Helipad();
 
         getChildren().addAll(pond, cloud, pad, helicopter);
     }
@@ -149,19 +142,19 @@ class Game extends Pane{
         Helicopter.toggleIgnition();
     }
 
-    public void showBoundries() {
-        helicopter.toggleBoundries();
+    public void showBoundaries() {
+        helicopter.toggleBoundaries();
+        cloud.toggleBoundaries();
     }
 
     public void saturateCloud() {
-        //if over cloud
         if(Helicopter.isOn()) {
-            if (!Shape.intersect(helicopter.helicopter, cloud.circle).getBoundsInLocal().isEmpty()) {
-                System.out.print("\nCloud: " + cloud.getSaturation());
+            if (!Shape.intersect(helicopter.helicopter,
+                    cloud.circle).getBoundsInLocal().isEmpty()) {
                 if (cloud.getSaturation() < 100) {
                     cloud.saturate();
                     if (cloud.getSaturation() >= 30) {
-                        pond.fillPond(cloud.getSaturation() * .05); //5% of sat
+                        pond.fillPond(cloud.getSaturation() * .05); //5%
                     }
                 }
             }
@@ -177,7 +170,7 @@ abstract class GameObject extends Group {
     protected Translate myTranslation;
     protected Rotate myRotation;
     protected Scale myScale;
-    private Point2D coords;
+    private Point2D cords;
 
     public GameObject(){
         myTranslation = new Translate();
@@ -185,11 +178,11 @@ abstract class GameObject extends Group {
         myScale = new Scale();
     }
 
-    public GameObject(Point2D coords){
+    public GameObject(Point2D cords){
         myTranslation = new Translate();
         myRotation = new Rotate();
         myScale = new Scale();
-        this.coords = coords;
+        this.cords = cords;
     }
 
 
@@ -214,8 +207,8 @@ abstract class GameObject extends Group {
         return myRotation.getAngle();
     }
 
-    public Point2D getCoords(){
-        return coords;
+    public Point2D getCords(){
+        return cords;
     }
 
 
@@ -234,21 +227,21 @@ abstract class Fixed extends GameObject{
         super();
     }
 
-    public Fixed(Point2D coords){
-        super(coords);
+    public Fixed(Point2D cords){
+        super(cords);
     }
 }
 
-abstract class Moveable extends GameObject{
+abstract class Movable extends GameObject{
     double heading;
     double speed;
 
-    public Moveable(){
+    public Movable(){
         super();
     }
 
-    public Moveable(Point2D coords){
-        super(coords);
+    public Movable(Point2D cords){
+        super(cords);
     }
 
     public abstract void move();
@@ -262,12 +255,15 @@ class Cloud extends Fixed {
     private double area;
     final Circle circle;
     private final GameText text;
+    private boolean showBorder;
 
-    public Cloud(Point2D coords) {
-        super(coords);
+
+    public Cloud(Point2D cords) {
+        super(cords);
         saturation = 0;
         radius = 50;
         area = Math.PI * Math.pow(radius, 2);
+        showBorder = true;
 
         circle = new Circle(radius);
         text = new GameText(String.format("%.0f %%", saturation));
@@ -275,18 +271,15 @@ class Cloud extends Fixed {
         circle.setFill(Color.WHITE);
         circle.setStroke(Color.BLACK);
         circle.setStrokeWidth(2);
-        circle.setCenterX(coords.getX());
-        circle.setCenterY(coords.getY());
+        circle.setCenterX(cords.getX());
+        circle.setCenterY(cords.getY());
         text.setFill(Color.BLUE);
-        text.setX(coords.getX() - 10);
-        text.setY(coords.getY() + 10);
+        text.setX(cords.getX() - 10);
+        text.setY(cords.getY() + 10);
+        drawBoundaries();
 
         add(circle);
         add(text);
-    }
-
-    public double getArea() {
-        return area;
     }
 
     public double getSaturation(){
@@ -319,6 +312,20 @@ class Cloud extends Fixed {
             circle.setFill(color);
         }
     }
+
+    private void drawBoundaries(){
+        if(showBorder){
+            circle.setStroke(Color.GREEN);
+        }
+        else{
+            circle.setStroke(Color.TRANSPARENT);
+        }
+    }
+
+    public void toggleBoundaries() {
+        showBorder = !showBorder;
+        drawBoundaries();
+    }
 }
 
 
@@ -327,17 +334,17 @@ class Pond extends Fixed {
     private double radius;
     private double area;
     private double percentage;
-    private Circle circle;
+    private final Circle circle;
     private final GameText text;
-    private Random random;
 
     static Random rand = new Random();
-    static Point2D coords = new Point2D(rand.nextInt((int) GameApp.windowSize.getX()),
+    static Point2D cords = new Point2D(
+            rand.nextInt((int) GameApp.windowSize.getX()),
             rand.ints((int) (GameApp.windowSize.getY() / 3),
                     (int) GameApp.windowSize.getY()).findFirst().getAsInt());
 
     public Pond() {
-        super(coords);
+        super(cords);
         percentage = 0;
         radius = 25;
         area = Math.PI * Math.pow(radius, 2);
@@ -347,11 +354,11 @@ class Pond extends Fixed {
         circle.setFill(Color.BLUE);
         circle.setStroke(Color.BLACK);
         circle.setStrokeWidth(2);
-        circle.setCenterX(coords.getX());
-        circle.setCenterY(coords.getY());
+        circle.setCenterX(cords.getX());
+        circle.setCenterY(cords.getY());
         text.setFill(Color.WHITE);
-        text.setX(coords.getX() - 10);
-        text.setY(coords.getY() + 10);
+        text.setX(cords.getX() - 10);
+        text.setY(cords.getY() + 10);
 
         add(circle);
         add(text);
@@ -408,7 +415,7 @@ class Helipad extends Fixed {
     }
 }
 
-class Helicopter extends Moveable implements Updatable {
+class Helicopter extends Movable implements Updatable {
     Circle body;
     Rectangle headingIndicator;
     Rectangle helicopter;
@@ -419,7 +426,7 @@ class Helicopter extends Moveable implements Updatable {
     private static boolean ignitionOn;
     private Point2D heliCenter;
     private final Point2D padCenter;
-    private boolean showHelicopter;
+    private boolean showBorder;
     int fuel;
     GameText fuelText;
 
@@ -427,7 +434,7 @@ class Helicopter extends Moveable implements Updatable {
         super();
         heading = 0;
         speed = 0;
-        showHelicopter = true;
+        showBorder = true;
         this.fuel = fuel;
         this.padCenter = padCenter;
         heliSize = new Point2D(80, 80);
@@ -450,12 +457,12 @@ class Helicopter extends Moveable implements Updatable {
     }
     private void makeHelicopter() {
         helicopter = new Rectangle(heliSize.getX(), heliSize.getY());
-        drawBoundries();
+        drawBoundaries();
         add(helicopter);
     }
 
-    private void drawBoundries(){
-        if(showHelicopter){
+    private void drawBoundaries(){
+        if(showBorder){
             helicopter.setStroke(Color.GREEN);
             helicopter.setFill(Color.TRANSPARENT);
         }
@@ -524,23 +531,15 @@ class Helicopter extends Moveable implements Updatable {
         System.out.println("Ignition on: " + ignitionOn);
     }
 
-    public double getHeading(){
-        return this.heading;
-    }
-
-
-    public void toggleBoundries() {
-        showHelicopter = !showHelicopter;
-        drawBoundries();
+    public void toggleBoundaries() {
+        showBorder = !showBorder;
+        drawBoundaries();
     }
 
     public int getFuel(){
         return fuel;
     }
 
-    public double getSpeed(){
-        return speed;
-    }
 }
 
 class GameText extends GameObject {
