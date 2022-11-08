@@ -9,7 +9,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
@@ -23,7 +22,7 @@ import java.util.Random;
 
 
 public class GameApp extends Application {
-    static final Point2D windowSize = new Point2D(400, 800);
+    static final Point2D windowSize = new Point2D(600, 800);
 
 
     public static void main(String[] args) {
@@ -71,11 +70,12 @@ class Game extends Pane{
     private int water;
     private int score;
     private int time;
+    private int frames;
     private int degreesToRotate;
     Random rand = new Random();
     Point2D gameSize = new Point2D(rand.nextInt((int) GameApp.windowSize.getX()),
-                rand.ints((int) (GameApp.windowSize.getY() / 3),
-                        (int) GameApp.windowSize.getY()).findFirst().getAsInt());
+            rand.ints((int) (GameApp.windowSize.getY() / 3),
+                    (int) GameApp.windowSize.getY()).findFirst().getAsInt());
 
 
     Game(){
@@ -85,6 +85,7 @@ class Game extends Pane{
         AnimationTimer loop = new AnimationTimer() {
             @Override
             public void handle(long now) {
+                frames++;
                 run();
             }
         };
@@ -98,18 +99,22 @@ class Game extends Pane{
         if(Helicopter.isOn()){
             helicopter.move();
             helicopter.update();
+            if((int) cloud.getSaturation() > 0 && frames % 150 == 0){
+                cloud.desaturate();
+            }
         }
     }
 
     private void init(){
         fuel = 25000;
         degreesToRotate = 15;
+        frames = 0;
         helicopter = new Helicopter(new Point2D(Helipad.getCenter().getX(),
                 Helipad.getCenter().getY()), fuel);
 
         gameSize = new Point2D(rand.nextInt((int) GameApp.windowSize.getX()),
                 rand.ints((int) (GameApp.windowSize.getY() / 3),
-                    (int) GameApp.windowSize.getY()).findFirst().getAsInt());
+                        (int) GameApp.windowSize.getY()).findFirst().getAsInt());
 
         pond = new Pond();
         cloud = new Cloud(gameSize);
@@ -149,9 +154,12 @@ class Game extends Pane{
 
     public void saturateCloud() {
         //if over cloud
-        cloud.saturate();
-        if(cloud.getSaturation() <= 30){
-            //pond.fillPond(cloud.getSaturation());
+        System.out.print("\nCloud: " + cloud.getSaturation());
+        if(cloud.getSaturation() < 100){
+            cloud.saturate();
+            if(cloud.getSaturation() >= 30){
+                pond.fillPond(cloud.getSaturation() * .05); //5% of sat
+            }
         }
     }
 }
@@ -247,8 +255,8 @@ class Cloud extends Fixed {
     private Color color;
     private double radius;
     private double area;
-    private Circle circle;
-    private GameText text;
+    private final Circle circle;
+    private final GameText text;
 
     public Cloud(Point2D coords) {
         super(coords);
@@ -284,24 +292,26 @@ class Cloud extends Fixed {
         if(saturation < 100){
             saturation += 1;
             text.setText(String.format("%.0f %%", saturation));
-            desaturate();
+            color = Color.rgb(
+                    (int) (255 * color.getRed() - 1),
+                    (int) (255 * color.getGreen() - 1),
+                    (int) (255 * color.getBlue() - 1 )
+            );
+            circle.setFill(color);
         }
-
-        /*
-        if(saturation >= 100){
-            System.out.println(String.format("rgba(%d, %d, %d, %f)",
-                    (int) (255 * color.getRed()),
-                    (int) (255 * color.getGreen()),
-                    (int) (255 * color.getBlue()),
-                    color.getOpacity()
-            ));
-        }
-         */
     }
 
-    private void desaturate() {
-        color = Color.rgb((int) (255 - saturation), (int) (255 - saturation), (int) (255 - saturation));
-        circle.setFill(color);
+    public void desaturate() {
+        if(saturation > 0){
+            saturation -= 1;
+            text.setText(String.format("%.0f %%", saturation));
+            color = Color.rgb(
+                    (int) (255 * color.getRed() + 1),
+                    (int) (255 * color.getGreen() + 1),
+                    (int) (255 * color.getBlue() + 1 )
+            );
+            circle.setFill(color);
+        }
     }
 }
 
@@ -312,7 +322,7 @@ class Pond extends Fixed {
     private double area;
     private double percentage;
     private Circle circle;
-    private GameText text;
+    private final GameText text;
     private Random random;
 
     static Random rand = new Random();
@@ -340,6 +350,10 @@ class Pond extends Fixed {
         add(text);
     }
 
+    public void fillPond(double fillRate) {
+        percentage += fillRate;
+        text.setText(String.format("%.0f %%", percentage));
+    }
 }
 
 class Helipad extends Fixed {
