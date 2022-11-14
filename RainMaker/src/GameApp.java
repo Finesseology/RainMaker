@@ -9,6 +9,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Arc;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
@@ -438,7 +439,7 @@ class Helipad extends Fixed {
 }
 
 class HeloBody extends Fixed{
-    private Circle body;
+    private Circle body, rotorCenter;
     private Rectangle rotorMain;
     private Rectangle leftSkid, rightSkid;
     private Rectangle leftSkidConnectorFront, leftSkidConnectorBack,
@@ -446,7 +447,6 @@ class HeloBody extends Fixed{
     private Rectangle tail;
     private Rectangle tailRotor, tailRotorConnector;
     private Color paint;
-    private Point2D center;
 
     HeloBody(){
         init();
@@ -454,40 +454,39 @@ class HeloBody extends Fixed{
 
     private void init(){
         paint = Color.ORANGE;
-        center = new Point2D(
-                Helipad.getCenter().getX(),
-                Helipad.getCenter().getY()
-        );
+
         makeBody();
         makeRotorMain();
         makeTail();
         makeSkids();
         makeTailRotor();
+        makeWindow();
         positionPieces();
     }
 
     private void positionPieces(){
+        positionMainBody();
+        positionSkids();
+        positionRotor();
+    }
+
+    private void positionMainBody(){
         rotorMain.setX(-40);
         rotorMain.setY(-50);
 
-        tail.setX(-center.getX() + 185);
-        tail.setY(-center.getY() - 40);
+        rotorCenter.setCenterX(rotorMain.getX() + rotorMain.getWidth() / 2);
+        rotorCenter.setCenterY(rotorMain.getY() + rotorMain.getHeight() / 2);
 
-        positionSkids();
-
-        tailRotor.setX(20);
-        tailRotor.setY(-150);
-
-        tailRotorConnector.setX(5);
-        tailRotorConnector.setY(-132.5);
+        tail.setX(-15);
+        tail.setY(-140);
     }
 
     private void positionSkids(){
-        leftSkid.setX(-center.getX() + 150);
-        leftSkid.setY(-center.getY() + 35);
+        leftSkid.setX(-50);
+        leftSkid.setY(-65);
 
-        rightSkid.setX(-center.getX() + 245);
-        rightSkid.setY(-center.getY() + 35);
+        rightSkid.setX(45);
+        rightSkid.setY(-65);
 
         leftSkidConnectorFront.setX(-50);
         leftSkidConnectorFront.setY(0);
@@ -502,6 +501,13 @@ class HeloBody extends Fixed{
         rightSkidConnectorBack.setY(-37);
     }
 
+    private void positionRotor(){
+        tailRotor.setX(20);
+        tailRotor.setY(-150);
+        tailRotorConnector.setX(5);
+        tailRotorConnector.setY(-132.5);
+    }
+
     private void makeBody(){
         body = new Circle();
         body.setRadius(40);
@@ -511,8 +517,13 @@ class HeloBody extends Fixed{
 
     private void makeRotorMain(){
         rotorMain = new Rectangle(80, 30);
+        rotorCenter = new Circle(5);
+
         rotorMain.setFill(paint);
+        rotorCenter.setFill(Color.GREY);
+
         add(rotorMain);
+        add(rotorCenter);
     }
 
     private void makeTail(){
@@ -554,6 +565,12 @@ class HeloBody extends Fixed{
         tailRotorConnector.setFill(paint);
         add(tailRotor);
         add(tailRotorConnector);
+    }
+
+    private void makeWindow(){
+        Arc window = new Arc(0, 8, 32, 30, 180, 180);
+        window.setFill(Color.BLUE);
+        add(window);
     }
 
 }
