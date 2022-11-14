@@ -4,6 +4,8 @@ import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -18,6 +20,8 @@ import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
+
+import java.io.FileInputStream;
 import java.util.Random;
 
 
@@ -192,6 +196,7 @@ abstract class GameObject extends Group {
         myRotation.setPivotY(0);
         setRotate(-degrees);
     }
+
 
     public void scale(double sx, double sy) {
         myScale.setX(sx);
@@ -375,6 +380,7 @@ class Helipad extends Fixed {
     Rectangle padSquare;
     private final int radius;
     private final Point2D padSize;
+    ImageView padView;
 
     private static final Point2D center = new Point2D(
             GameApp.windowSize.getX() / 2,
@@ -385,9 +391,26 @@ class Helipad extends Fixed {
         padSize = new Point2D(100, 100);
         int circlePadding = 10;
         radius = (int) (padSize.getX() / 2 - circlePadding);
+        init();
+    }
 
+    private void init(){
+        makeHeliImage();
         makeCircle();
         makeRectangle();
+    }
+
+    private void makeHeliImage(){
+        padView = new ImageView();
+
+        padView.setImage(new Image("heliport.png"));
+        padView.setFitWidth(padSize.getX());
+        padView.setPreserveRatio(true);
+        padView.setSmooth(true);
+        padView.setCache(true);
+        padView.setX(center.getX() - padSize.getX() / 2);
+        padView.setY(center.getY() - padSize.getY() / 2);
+        add(padView);
     }
 
     private void makeRectangle(){
