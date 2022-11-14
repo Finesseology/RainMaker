@@ -454,7 +454,6 @@ class HeloBody extends Fixed{
 
     private void init(){
         paint = Color.ORANGE;
-
         makeBody();
         makeRotorMain();
         makeTail();
@@ -575,6 +574,42 @@ class HeloBody extends Fixed{
 
 }
 
+class HeloBlade extends Movable{
+    private Rectangle blade;
+    private Circle bladeCenter;
+
+    HeloBlade(){
+        init();
+    }
+
+    private void init(){
+        makeBlade();
+        positionPieces();
+    }
+
+    private void positionPieces() {
+        blade.setX(-2.5);
+        blade.setY(-135);
+
+        bladeCenter.setCenterX(blade.getX() + blade.getWidth() / 2);
+        bladeCenter.setCenterY(blade.getY() + blade.getHeight() / 2);
+
+    }
+
+    private void makeBlade() {
+        blade = new Rectangle(5, 200);
+        bladeCenter = new Circle(3, Color.BLACK);
+        blade.setFill(Color.GREY);
+        add(blade);
+        add(bladeCenter);
+    }
+
+    @Override
+    public void move() {
+
+    }
+}
+
 class Helicopter extends Movable implements Updatable {
     Circle body;
     Rectangle headingIndicator;
@@ -590,6 +625,7 @@ class Helicopter extends Movable implements Updatable {
     int fuel;
     GameText fuelText;
     HeloBody helibody;
+    HeloBlade heliblade;
 
     Helicopter(Point2D padCenter, int fuel) {
         super();
@@ -674,7 +710,14 @@ class Helicopter extends Movable implements Updatable {
         helibody = new HeloBody();
         helibody.setTranslateX(200);
         helibody.setTranslateY(400);
+
+        heliblade = new HeloBlade();
+        heliblade.setTranslateX(200);
+        heliblade.setTranslateY(400);
+
+
         add(helibody);
+        add(heliblade);
     }
 
     @Override
