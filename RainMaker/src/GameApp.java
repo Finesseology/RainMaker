@@ -380,7 +380,7 @@ class Helipad extends Fixed {
     Rectangle padSquare;
     private final int radius;
     private final Point2D padSize;
-    ImageView padView;
+    private ImageView padView;
 
     private static final Point2D center = new Point2D(
             GameApp.windowSize.getX() / 2,
@@ -438,6 +438,83 @@ class Helipad extends Fixed {
     }
 }
 
+class HeloBody extends Fixed{
+    private Circle body;
+    private Rectangle rotorMain;
+    private Rectangle leftSkid, rightSkid;
+    private Rectangle rutter;
+    private Color paint;
+    private Point2D center;
+
+    HeloBody(){
+        init();
+    }
+
+    private void init(){
+        paint = Color.ORANGE;
+        center = new Point2D(
+                Helipad.getCenter().getX(),
+                Helipad.getCenter().getY()
+        );
+        makeBody();
+        makeRotorMain();
+        makeRutter();
+        makeSkids();
+        positionPieces();
+    }
+
+    private void positionPieces(){
+
+        rotorMain.setX(-40);
+        rotorMain.setY(-50);
+
+        rutter.setX(-center.getX() + 185);
+        rutter.setY(-center.getY() - 40);
+
+        leftSkid.setX(-center.getX() + 145);
+        leftSkid.setY(-center.getY() + 35);
+
+        rightSkid.setX(-center.getX() + 245);
+        rightSkid.setY(-center.getY() + 35);
+
+        System.out.print("center" + center);
+
+    }
+
+    private void makeBody(){
+        body = new Circle();
+        body.setRadius(40);
+        body.setFill(paint);
+        add(body);
+    }
+
+    private void makeRotorMain(){
+        rotorMain = new Rectangle(80, 30);
+        rotorMain.setFill(paint);
+        add(rotorMain);
+    }
+
+    private void makeRutter(){
+        rutter = new Rectangle(30, 90);
+        rutter.setFill(paint);
+        add(rutter);
+    }
+
+    private void makeSkids() {
+        double height, width;
+        height = 90;
+        width = 10;
+
+        leftSkid = new Rectangle(width, height);
+        rightSkid = new Rectangle(width, height);
+        leftSkid.setFill(Color.GREEN);
+        rightSkid.setFill(Color.RED);
+        add(leftSkid);
+        add(rightSkid);
+    }
+
+}
+
 class Helicopter extends Movable implements Updatable {
     Circle body;
     Rectangle headingIndicator;
@@ -452,6 +529,7 @@ class Helicopter extends Movable implements Updatable {
     private boolean showBorder;
     int fuel;
     GameText fuelText;
+    HeloBody helibody;
 
     Helicopter(Point2D padCenter, int fuel) {
         super();
@@ -464,11 +542,13 @@ class Helicopter extends Movable implements Updatable {
         heliCenter = new Point2D(heliSize.getX()/2, heliSize.getY()/2);
         ignitionOn = false;
 
-        makeHelicopter();
-        centerHeli();
+
+        //makeHelicopter();
+        //centerHeli();
         makeBody();
-        makeIndicator();
+        //makeIndicator();
         initFuel();
+
     }
 
     private void initFuel() {
@@ -516,12 +596,25 @@ class Helicopter extends Movable implements Updatable {
     }
 
     private void makeBody(){
+        /*
         body = new Circle(
                 heliCenter.getX() + heliSize.getX() / 2,
                 heliCenter.getY() + heliSize.getY() / 2,
-                10);
+                10
+        );
         body.setFill(Color.YELLOW);
         add(body);
+
+         */
+        heliCenter = new Point2D(
+                padCenter.getX() - heliSize.getX()/2,
+                padCenter.getY() - heliSize.getY()/2
+        );
+
+        helibody = new HeloBody();
+        helibody.setTranslateX(200);
+        helibody.setTranslateY(400);
+        add(helibody);
     }
 
     @Override
