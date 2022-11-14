@@ -21,7 +21,6 @@ import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 
-import java.io.FileInputStream;
 import java.util.Random;
 
 
@@ -442,7 +441,10 @@ class HeloBody extends Fixed{
     private Circle body;
     private Rectangle rotorMain;
     private Rectangle leftSkid, rightSkid;
-    private Rectangle rutter;
+    private Rectangle leftSkidConnectorFront, leftSkidConnectorBack,
+                      rightSkidConnectorFront, rightSkidConnectorBack;
+    private Rectangle tail;
+    private Rectangle tailRotor, tailRotorConnector;
     private Color paint;
     private Point2D center;
 
@@ -458,27 +460,46 @@ class HeloBody extends Fixed{
         );
         makeBody();
         makeRotorMain();
-        makeRutter();
+        makeTail();
         makeSkids();
+        makeTailRotor();
         positionPieces();
     }
 
     private void positionPieces(){
-
         rotorMain.setX(-40);
         rotorMain.setY(-50);
 
-        rutter.setX(-center.getX() + 185);
-        rutter.setY(-center.getY() - 40);
+        tail.setX(-center.getX() + 185);
+        tail.setY(-center.getY() - 40);
 
-        leftSkid.setX(-center.getX() + 145);
+        positionSkids();
+
+        tailRotor.setX(20);
+        tailRotor.setY(-150);
+
+        tailRotorConnector.setX(5);
+        tailRotorConnector.setY(-132.5);
+    }
+
+    private void positionSkids(){
+        leftSkid.setX(-center.getX() + 150);
         leftSkid.setY(-center.getY() + 35);
 
         rightSkid.setX(-center.getX() + 245);
         rightSkid.setY(-center.getY() + 35);
 
-        System.out.print("center" + center);
+        leftSkidConnectorFront.setX(-50);
+        leftSkidConnectorFront.setY(0);
 
+        leftSkidConnectorBack.setX(-50);
+        leftSkidConnectorBack.setY(-37);
+
+        rightSkidConnectorFront.setX(35);
+        rightSkidConnectorFront.setY(0);
+
+        rightSkidConnectorBack.setX(35);
+        rightSkidConnectorBack.setY(-37);
     }
 
     private void makeBody(){
@@ -494,23 +515,45 @@ class HeloBody extends Fixed{
         add(rotorMain);
     }
 
-    private void makeRutter(){
-        rutter = new Rectangle(30, 90);
-        rutter.setFill(paint);
-        add(rutter);
+    private void makeTail(){
+        tail = new Rectangle(30, 90);
+        tail.setFill(paint);
+        add(tail);
     }
 
     private void makeSkids() {
-        double height, width;
-        height = 90;
-        width = 10;
+        double skidHeight = 90, skidWidth = 5;
+        double skidConnHeight = 5, skidConnWidth = 15;
 
-        leftSkid = new Rectangle(width, height);
-        rightSkid = new Rectangle(width, height);
-        leftSkid.setFill(Color.GREEN);
-        rightSkid.setFill(Color.RED);
+        leftSkid = new Rectangle(skidWidth, skidHeight);
+        rightSkid = new Rectangle(skidWidth, skidHeight);
+        leftSkid.setFill(paint);
+        rightSkid.setFill(paint);
+
+        leftSkidConnectorFront = new Rectangle(skidConnWidth, skidConnHeight);
+        leftSkidConnectorBack = new Rectangle(skidConnWidth, skidConnHeight);
+        rightSkidConnectorFront = new Rectangle(skidConnWidth, skidConnHeight);
+        rightSkidConnectorBack = new Rectangle(skidConnWidth, skidConnHeight);
+        leftSkidConnectorFront.setFill(paint);
+        leftSkidConnectorBack.setFill(paint);
+        rightSkidConnectorFront.setFill(paint);
+        rightSkidConnectorBack.setFill(paint);
+
         add(leftSkid);
         add(rightSkid);
+        add(leftSkidConnectorFront);
+        add(leftSkidConnectorBack);
+        add(rightSkidConnectorFront);
+        add(rightSkidConnectorBack);
+    }
+
+    private void makeTailRotor(){
+        tailRotor = new Rectangle(5, 40);
+        tailRotorConnector = new Rectangle(20, 5);
+        tailRotor.setFill(paint);
+        tailRotorConnector.setFill(paint);
+        add(tailRotor);
+        add(tailRotorConnector);
     }
 
 }
