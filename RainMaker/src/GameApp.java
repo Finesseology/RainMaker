@@ -66,7 +66,7 @@ public class GameApp extends Application {
 
 class Game extends Pane{
     private Pond pond;
-    private Cloud cloud;
+    private Cloud cloud, cloud2, cloud3;
     private Helicopter helicopter;
 
     private int frames;
@@ -110,15 +110,23 @@ class Game extends Pane{
         helicopter = new Helicopter(new Point2D(Helipad.getCenter().getX(),
                 Helipad.getCenter().getY()), fuel);
 
-        gameSize = new Point2D(rand.nextInt((int) GameApp.windowSize.getX()),
-                rand.ints((int) (GameApp.windowSize.getY() / 3),
-                (int) GameApp.windowSize.getY()).findFirst().getAsInt());
+        randomSize();
 
         pond = new Pond();
         cloud = new Cloud(gameSize);
+        randomSize();
+        cloud2 = new Cloud(gameSize);
+        randomSize();
+        cloud3 = new Cloud(gameSize);
         Helipad pad = new Helipad();
 
-        getChildren().addAll(pond, cloud, pad, helicopter);
+        getChildren().addAll(pond, cloud, cloud2, cloud3, pad, helicopter);
+    }
+
+    private void randomSize(){
+        gameSize = new Point2D(rand.nextInt((int) GameApp.windowSize.getX()),
+                rand.ints((int) (GameApp.windowSize.getY() / 3),
+                        (int) GameApp.windowSize.getY()).findFirst().getAsInt());
     }
 
     public void reset(){
@@ -572,13 +580,16 @@ class HeloBody extends Fixed{
         add(window);
     }
 
+
 }
 
 class HeloBlade extends Movable{
     private Rectangle blade;
     private Circle bladeCenter;
+    private final Point2D heliCenter;
 
-    HeloBlade(){
+    HeloBlade(Point2D heliCenter){
+        this.heliCenter = heliCenter;
         init();
     }
 
@@ -588,12 +599,11 @@ class HeloBlade extends Movable{
     }
 
     private void positionPieces() {
-        blade.setX(-2.5);
-        blade.setY(-135);
+        blade.setX(heliCenter.getX());
+        blade.setY(heliCenter.getY());
 
         bladeCenter.setCenterX(blade.getX() + blade.getWidth() / 2);
         bladeCenter.setCenterY(blade.getY() + blade.getHeight() / 2);
-
     }
 
     private void makeBlade() {
@@ -639,7 +649,7 @@ class Helicopter extends Movable implements Updatable {
         ignitionOn = false;
 
 
-        //makeHelicopter();
+        makeHelicopter();
         //centerHeli();
         makeBody();
         //makeIndicator();
@@ -650,14 +660,14 @@ class Helicopter extends Movable implements Updatable {
     private void initFuel() {
         fuelText = new GameText(String.valueOf(fuel));
         fuelText.setX(heliCenter.getX() + 13);
-        fuelText.setY(heliCenter.getY() + 20);
+        fuelText.setY(helibody.getTranslateY() - 105);
         fuelText.setFill(Color.YELLOW);
         add(fuelText);
     }
     private void makeHelicopter() {
         helicopter = new Rectangle(heliSize.getX(), heliSize.getY());
         drawBoundaries();
-        add(helicopter);
+        //add(helicopter);
     }
 
     private void drawBoundaries(){
@@ -708,13 +718,18 @@ class Helicopter extends Movable implements Updatable {
         );
 
         helibody = new HeloBody();
-        helibody.setTranslateX(200);
-        helibody.setTranslateY(400);
+        helibody.setTranslateX(heliCenter.getX() + heliSize.getX() / 2);
+        helibody.setTranslateY(heliCenter.getY() + heliSize.getY());
 
-        heliblade = new HeloBlade();
-        heliblade.setTranslateX(200);
-        heliblade.setTranslateY(400);
+        //heliblade = new HeloBlade(new Point2D(-2.5, -135));
+        heliblade = new HeloBlade(new Point2D(-2.5, -145)); //scale .5
+        heliblade.setTranslateX(heliCenter.getX() + heliSize.getX() / 2);
+        heliblade.setTranslateY(heliCenter.getY() + heliSize.getY());
 
+        helibody.setScaleX(.5);
+        helibody.setScaleY(.5);
+        heliblade.setScaleX(.5);
+        heliblade.setScaleY(.5);
 
         add(helibody);
         add(heliblade);
@@ -729,7 +744,7 @@ class Helicopter extends Movable implements Updatable {
     private void updateFuel(){
         fuel -= Math.abs(speed * 25); // x25 fuel consumption
         fuelText.setText(String.valueOf(fuel));
-        fuelText.setY(helicopter.getTranslateY() + heliSize.getY());
+        fuelText.setY(helibody.getTranslateY() - 105);
     }
 
     public void updateHeading(int update){
