@@ -7,7 +7,7 @@ import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Arc;
 import javafx.scene.shape.Circle;
@@ -111,6 +111,7 @@ class Game extends Pane{
                 Helipad.getCenter().getY()), fuel);
 
         randomSize();
+        makeBackground();
 
         pond = new Pond();
         cloud = new Cloud(gameSize);
@@ -171,6 +172,18 @@ class Game extends Pane{
                 }
             }
         }
+    }
+
+    private void makeBackground(){
+        //image is 500x500 and repeats seamlessly
+        Image backgroundImage = new Image("background.png");
+        BackgroundImage bg = new BackgroundImage(
+                backgroundImage,
+                BackgroundRepeat.REPEAT,
+                BackgroundRepeat.REPEAT,
+                BackgroundPosition.DEFAULT,
+                BackgroundSize.DEFAULT);
+        super.setBackground(new Background(bg));
     }
 }
 
