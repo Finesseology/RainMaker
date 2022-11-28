@@ -667,7 +667,8 @@ class Helicopter extends Movable implements Updatable {
     private void makeHelicopter() {
         helicopter = new Rectangle(heliSize.getX(), heliSize.getY());
         drawBoundaries();
-        //add(helicopter);
+        centerHeli();
+        add(helicopter);
     }
 
     private void drawBoundaries(){
@@ -805,4 +806,10 @@ class GameText extends GameObject {
     }
 
 }
+
+
+
+
+
+
 
