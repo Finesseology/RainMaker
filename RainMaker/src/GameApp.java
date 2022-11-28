@@ -175,6 +175,7 @@ class Game extends Pane{
     }
 
     private void makeBackground(){
+        //https://opengameart.org/node/10024
         //image is 500x500 and repeats seamlessly
         Image backgroundImage = new Image("background.png");
         BackgroundImage bg = new BackgroundImage(
@@ -673,7 +674,7 @@ class Helicopter extends Movable implements Updatable {
 
     private void initFuel() {
         fuelText = new GameText(String.valueOf(fuel));
-        fuelText.setX(heliCenter.getX() + 13);
+        fuelText.setX(heliCenter.getX());
         fuelText.setY(helibody.getTranslateY() - 105);
         fuelText.setFill(Color.YELLOW);
         add(fuelText);
