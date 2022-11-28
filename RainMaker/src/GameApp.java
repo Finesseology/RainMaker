@@ -455,6 +455,7 @@ class HeloBody extends Fixed{
     private Rectangle tail;
     private Rectangle tailRotor, tailRotorConnector;
     private Color paint;
+    private Rectangle heli;
 
     HeloBody(){
         init();
@@ -644,7 +645,7 @@ class Helicopter extends Movable implements Updatable {
         showBorder = true;
         this.fuel = fuel;
         this.padCenter = padCenter;
-        heliSize = new Point2D(80, 80);
+        heliSize = new Point2D(50, 100);
         heliCenter = new Point2D(heliSize.getX()/2, heliSize.getY()/2);
         ignitionOn = false;
 
