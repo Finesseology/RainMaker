@@ -649,6 +649,8 @@ class HeloBlade extends Movable{
         blade.setX(heliCenter.getX());
         blade.setY(heliCenter.getY());
 
+        blade.setRotate(25);
+
         bladeCenter.setCenterX(blade.getX() + blade.getWidth() / 2);
         bladeCenter.setCenterY(blade.getY() + blade.getHeight() / 2);
     }
