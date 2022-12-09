@@ -26,7 +26,7 @@ import java.util.Random;
 
 
 public class GameApp extends Application {
-    static final Point2D windowSize = new Point2D(400, 800);
+    static final Point2D windowSize = new Point2D(1000, 1000);
 
 
     public static void main(String[] args) {
@@ -735,7 +735,7 @@ class Helicopter extends Movable implements Updatable {
         helicopter = new Rectangle(
                 body.getCenterX() - body.getRadius(), // X
                 body.getCenterY() - body.getRadius(), // Y
-                body.getRadius()*2, // W
+                body.getRadius() * 2, // W
                 body.getRadius() + headingPointer.getHeight()); // H
         helicopter.setStroke(Color.TRANSPARENT);
         helicopter.setFill(Color.TRANSPARENT);
@@ -745,22 +745,24 @@ class Helicopter extends Movable implements Updatable {
 
     private void initFuel(){
         fuelText = new GameText(String.valueOf(fuel));
-        fuelText.setX(body.getCenterX() - 40);
-        fuelText.setY(body.getCenterY() - 20);
+        fuelText.setX(body.getCenterX() - 26);
+        fuelText.setY(body.getCenterY() - 25);
         fuelText.setFill(Color.YELLOW);
         add(fuelText);
     }
 
-    private void updateFuel(){
-        if (ignitionOn){
-            if (speed < 5)
-                fuel -= 10;
-            else
-                fuel -= 30;
 
-            checkFuel();
+    private void updateFuel(){
+        if(ignitionOn){
+            if(speed < 5){
+                fuel -= Math.abs(speed * 2); // x25 fuel consumption
+
+            }
+            else{
+                fuel -= Math.abs(speed * 5); // x25 fuel consumption
+            }
+            fuelText.setText(String.valueOf(fuel));
         }
-        fuelText.setText("F: " + fuel);
     }
 
     private void checkFuel(){
