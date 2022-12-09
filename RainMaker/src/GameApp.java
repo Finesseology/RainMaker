@@ -684,6 +684,14 @@ class Helicopter extends Movable implements Updatable {
     private double heading = 0;
     private double speed = 0;
     private final Point2D padCenter;
+    private Point2D heliCenter;
+    private Point2D heliSize;
+
+
+
+
+    HeloBody helibody;
+    HeloBlade heliblade;
 
 
     public Helicopter(Point2D padCenter, int fuel){
@@ -719,6 +727,7 @@ class Helicopter extends Movable implements Updatable {
         this.getTransforms().addAll(myTranslation, myRotation);
     }
 
+    /*
     private void makeHelicopter(){
         body = new Circle(15, Color.YELLOW);
 
@@ -731,22 +740,55 @@ class Helicopter extends Movable implements Updatable {
         add(headingPointer);
     }
 
+     */
+    private void makeHelicopter() {
+        /*
+        heliSize = new Point2D(helicopter.getX(), helicopter.getY());
+        heliCenter = new Point2D(
+                padCenter.getX() - heliSize.getX()/2,
+                padCenter.getY() - heliSize.getY()/2
+        );
+
+         */
+        makeBody();
+        makeBlade();
+    }
+
+    private void makeBody(){
+        helibody = new HeloBody();
+
+        helibody.setScaleX(.5);
+        helibody.setScaleY(.5);
+
+        helibody.setTranslateX(0);
+        helibody.setTranslateY(50);
+
+
+        add(helibody);
+    }
+
+    private void makeBlade(){
+        // = new HeloBlade(new Point2D(-2.5, -145)); //scale .5
+
+        //add(heliblade);
+    }
+
     private void makeHelicopterBounds() {
         helicopter = new Rectangle(
-                body.getCenterX() - body.getRadius(), // X
-                body.getCenterY() - body.getRadius(), // Y
-                body.getRadius() * 2, // W
-                body.getRadius() + headingPointer.getHeight()); // H
-        helicopter.setStroke(Color.TRANSPARENT);
-        helicopter.setFill(Color.TRANSPARENT);
+                -25, // X
+                -52, // Y
+                50, // W
+                95 // H
+        );
+        drawBoundaries();
 
         add(helicopter);
     }
 
     private void initFuel(){
         fuelText = new GameText(String.valueOf(fuel));
-        fuelText.setX(body.getCenterX() - 26);
-        fuelText.setY(body.getCenterY() - 25);
+        fuelText.setX(helicopter.getX());
+        fuelText.setY(helicopter.getY() - 10); // move text down 10 for room
         fuelText.setFill(Color.YELLOW);
         add(fuelText);
     }
@@ -756,18 +798,11 @@ class Helicopter extends Movable implements Updatable {
         if(ignitionOn){
             if(speed < 5){
                 fuel -= Math.abs(speed * 2); // x25 fuel consumption
-
             }
             else{
                 fuel -= Math.abs(speed * 5); // x25 fuel consumption
             }
             fuelText.setText(String.valueOf(fuel));
-        }
-    }
-
-    private void checkFuel(){
-        if (fuel<= 0) {
-            speed = 0;
         }
     }
 
