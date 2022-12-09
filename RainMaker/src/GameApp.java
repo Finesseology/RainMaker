@@ -699,7 +699,7 @@ class Helicopter extends Movable implements Updatable {
 
         this.padCenter = padCenter;
         this.fuel = fuel;
-        showBorder = true;
+        showBorder = false;
 
         makeHelicopter();
         makeHelicopterBounds();
@@ -768,9 +768,15 @@ class Helicopter extends Movable implements Updatable {
     }
 
     private void makeBlade(){
-        // = new HeloBlade(new Point2D(-2.5, -145)); //scale .5
+        heliblade = new HeloBlade(new Point2D(-2.5, -145)); //scale .5
 
-        //add(heliblade);
+        heliblade.setScaleX(.5);
+        heliblade.setScaleY(.5);
+
+        heliblade.setTranslateX(0);
+        heliblade.setTranslateY(50);
+
+        add(heliblade);
     }
 
     private void makeHelicopterBounds() {
