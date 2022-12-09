@@ -96,9 +96,6 @@ class Game extends Pane{
         }
         if(Helicopter.isOn()){
             helicopter.move(); //left/right
-            //helicopter.update();
-            System.out.println("Speed: " + helicopter.getSpeed());
-            System.out.println("Heading: " + helicopter.getHeading());
             if((int) cloud.getSaturation() > 0 && frames % 150 == 0){
                 cloud.desaturate();
             }
@@ -666,7 +663,11 @@ class HeloBlade extends Movable{
 
     @Override
     public void move() {
+        blade.setRotate(blade.getRotate() + 0.01);
+        //this.rotate(this.getMyRotation() + 0.1);
 
+        System.out.println("Moving: "
+        );
     }
 }
 
@@ -713,6 +714,7 @@ class Helicopter extends Movable implements Updatable {
     @Override
     public void move() {
         updateFuel();
+        updateBlade();
 
         translate(
                 myTranslation.getX()
@@ -725,6 +727,18 @@ class Helicopter extends Movable implements Updatable {
 
         this.getTransforms().clear();
         this.getTransforms().addAll(myTranslation, myRotation);
+    }
+
+    private void updateBlade() {
+        if(ignitionOn){
+            AnimationTimer loop = new AnimationTimer() {
+                @Override
+                public void handle(long now) {
+                    heliblade.move();
+                }
+            };
+            loop.start();
+        }
     }
 
     /*
@@ -753,7 +767,6 @@ class Helicopter extends Movable implements Updatable {
         makeBody();
         makeBlade();
     }
-
     private void makeBody(){
         helibody = new HeloBody();
 
@@ -770,11 +783,13 @@ class Helicopter extends Movable implements Updatable {
     private void makeBlade(){
         heliblade = new HeloBlade(new Point2D(-2.5, -145)); //scale .5
 
-        heliblade.setScaleX(.5);
-        heliblade.setScaleY(.5);
+        //heliblade.setScaleX(.5);
+        //heliblade.setScaleY(.5);
+        heliblade.scale(.5, .5);
 
-        heliblade.setTranslateX(0);
-        heliblade.setTranslateY(50);
+        //heliblade.setTranslateX(0);
+        //heliblade.setTranslateY(50);
+        heliblade.translate(0, 27);
 
         add(heliblade);
     }
