@@ -70,7 +70,6 @@ class Game extends Pane{
     private Helicopter helicopter;
 
     private int frames;
-    private int degreesToRotate;
     Random rand = new Random();
     Point2D gameSize = new Point2D(rand.nextInt((int) GameApp.windowSize.getX()),
             rand.ints((int) (GameApp.windowSize.getY() / 3),
@@ -104,7 +103,6 @@ class Game extends Pane{
 
     private void init(){
         int fuel = 25000;
-        degreesToRotate = 15;
         frames = 0;
         helicopter = new Helicopter(new Point2D(Helipad.getCenter().getX(),
                 Helipad.getCenter().getY()), fuel);
@@ -134,24 +132,6 @@ class Game extends Pane{
         init();
     }
 
-    /*
-    public void left(){
-        helicopter.updateHeading(-degreesToRotate);
-        helicopter.rotate(helicopter.getMyRotation() - degreesToRotate);
-        helicopter.update();
-    }
-
-    public void right(){
-        helicopter.updateHeading(degreesToRotate);
-        helicopter.rotate(helicopter.getMyRotation() + degreesToRotate);
-        helicopter.update();
-    }
-
-    public void updateSpeed(double speed){
-        helicopter.updateSpeed(speed);
-    }
-
-     */
     public void moveLeft(){
         helicopter.rotateLeft();
     }
@@ -236,7 +216,6 @@ abstract class GameObject extends Group {
         myRotation.setAngle(degrees);
         myRotation.setPivotX(0);
         myRotation.setPivotY(0);
-        //setRotate(-degrees);
     }
 
 
@@ -246,8 +225,6 @@ abstract class GameObject extends Group {
     }
 
     public void translate(double tx, double ty) {
-        //myTranslation.setX(myTranslation.getX() + tx);
-        //myTranslation.setY(myTranslation.getY() + ty);
         myTranslation.setX(tx);
         myTranslation.setY(ty);
     }
@@ -260,13 +237,6 @@ abstract class GameObject extends Group {
         return cords;
     }
 
-    /*
-        public void update() {
-            this.getTransforms().clear();
-            this.getTransforms().addAll(myTranslation);
-        }
-
-     */
     public void update(){
         for(Node n : getChildren()){
             if(n instanceof Updatable)
@@ -501,7 +471,6 @@ class HeloBody extends Fixed{
     private Rectangle tail;
     private Rectangle tailRotor, tailRotorConnector;
     private Color paint;
-    private Rectangle heli;
 
     HeloBody(){
         init();
@@ -667,15 +636,10 @@ class HeloBlade extends Movable{
     public void move() {
         blade.setRotate(blade.getRotate() + 0.01);
         //this.rotate(this.getMyRotation() + 0.1);
-
-        System.out.println("Moving: "
-        );
     }
 }
 
 class Helicopter extends Movable implements Updatable {
-    private Circle body;
-    private Rectangle headingPointer;
     Rectangle helicopter;
     private GameText fuelText;
 
@@ -686,13 +650,6 @@ class Helicopter extends Movable implements Updatable {
 
     private double heading = 0;
     private double speed = 0;
-    private final Point2D padCenter;
-    private Point2D heliCenter;
-    private Point2D heliSize;
-
-
-
-
     HeloBody helibody;
     HeloBlade heliblade;
 
@@ -700,7 +657,6 @@ class Helicopter extends Movable implements Updatable {
     public Helicopter(Point2D padCenter, int fuel){
         super();
 
-        this.padCenter = padCenter;
         this.fuel = fuel;
         showBorder = false;
 
@@ -743,29 +699,7 @@ class Helicopter extends Movable implements Updatable {
         }
     }
 
-    /*
-    private void makeHelicopter(){
-        body = new Circle(15, Color.YELLOW);
-
-        headingPointer =
-                new Rectangle(body.getCenterX()-1, body.getCenterY(),
-                        3, body.getRadius()*3);
-        headingPointer.setFill(Color.YELLOW);
-
-        add(body);
-        add(headingPointer);
-    }
-
-     */
     private void makeHelicopter() {
-        /*
-        heliSize = new Point2D(helicopter.getX(), helicopter.getY());
-        heliCenter = new Point2D(
-                padCenter.getX() - heliSize.getX()/2,
-                padCenter.getY() - heliSize.getY()/2
-        );
-
-         */
         makeBody();
         makeBlade();
     }
