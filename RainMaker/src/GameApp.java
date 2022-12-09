@@ -41,17 +41,17 @@ public class GameApp extends Application {
         game.setScaleY(-1);
         stage.setScene(scene);
         stage.setTitle("RainMaker");
-        stage.setResizable(false);
+        //stage.setResizable(false);
         stage.show();
 
         scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
                 switch (event.getCode()) {
-                    case LEFT -> game.left();
-                    case RIGHT -> game.right();
-                    case UP -> game.updateSpeed(0.1);
-                    case DOWN -> game.updateSpeed(-0.1);
+                    case LEFT -> game.moveLeft();
+                    case RIGHT -> game.moveRight();
+                    case UP -> game.moveForward();
+                    case DOWN -> game.moveBackward();
                     case I -> game.toggleIgnition();
                     case B -> game.showBoundaries();
                     case R -> game.reset();
@@ -95,8 +95,10 @@ class Game extends Pane{
             reset();
         }
         if(Helicopter.isOn()){
-            helicopter.move();
-            helicopter.update();
+            helicopter.move(); //left/right
+            //helicopter.update();
+            System.out.println("Speed: " + helicopter.getSpeed());
+            System.out.println("Heading: " + helicopter.getHeading());
             if((int) cloud.getSaturation() > 0 && frames % 150 == 0){
                 cloud.desaturate();
             }
@@ -135,6 +137,7 @@ class Game extends Pane{
         init();
     }
 
+    /*
     public void left(){
         helicopter.updateHeading(-degreesToRotate);
         helicopter.rotate(helicopter.getMyRotation() - degreesToRotate);
@@ -151,8 +154,26 @@ class Game extends Pane{
         helicopter.updateSpeed(speed);
     }
 
+     */
+    public void moveLeft(){
+        helicopter.rotateLeft();
+    }
+
+    public void moveRight(){
+        helicopter.rotateRight();
+    }
+
+    public void moveForward(){
+        helicopter.moveForward();
+    }
+
+    public void moveBackward(){
+        helicopter.moveBackward();
+    }
+
+
     public void toggleIgnition() {
-        Helicopter.toggleIgnition();
+        helicopter.toggleIgnition();
     }
 
     public void showBoundaries() {
@@ -202,6 +223,7 @@ abstract class GameObject extends Group {
         myTranslation = new Translate();
         myRotation = new Rotate();
         myScale = new Scale();
+        this.getTransforms().addAll(myTranslation, myRotation, myScale);
     }
 
     public GameObject(Point2D cords){
@@ -209,6 +231,7 @@ abstract class GameObject extends Group {
         myRotation = new Rotate();
         myScale = new Scale();
         this.cords = cords;
+        this.getTransforms().addAll(myTranslation, myRotation, myScale);
     }
 
 
@@ -216,7 +239,7 @@ abstract class GameObject extends Group {
         myRotation.setAngle(degrees);
         myRotation.setPivotX(0);
         myRotation.setPivotY(0);
-        setRotate(-degrees);
+        //setRotate(-degrees);
     }
 
 
@@ -226,8 +249,10 @@ abstract class GameObject extends Group {
     }
 
     public void translate(double tx, double ty) {
-        myTranslation.setX(myTranslation.getX() + tx);
-        myTranslation.setY(myTranslation.getY() + ty);
+        //myTranslation.setX(myTranslation.getX() + tx);
+        //myTranslation.setY(myTranslation.getY() + ty);
+        myTranslation.setX(tx);
+        myTranslation.setY(ty);
     }
 
     public double getMyRotation(){
@@ -238,8 +263,18 @@ abstract class GameObject extends Group {
         return cords;
     }
 
+    /*
+        public void update() {
+            this.getTransforms().clear();
+            this.getTransforms().addAll(myTranslation);
+        }
 
-    public void update() {
+     */
+    public void update(){
+        for(Node n : getChildren()){
+            if(n instanceof Updatable)
+                ((Updatable)n).update();
+        }
         this.getTransforms().clear();
         this.getTransforms().addAll(myTranslation);
     }
@@ -465,7 +500,7 @@ class HeloBody extends Fixed{
     private Rectangle rotorMain;
     private Rectangle leftSkid, rightSkid;
     private Rectangle leftSkidConnectorFront, leftSkidConnectorBack,
-                      rightSkidConnectorFront, rightSkidConnectorBack;
+            rightSkidConnectorFront, rightSkidConnectorBack;
     private Rectangle tail;
     private Rectangle tailRotor, tailRotorConnector;
     private Color paint;
@@ -636,54 +671,131 @@ class HeloBlade extends Movable{
 }
 
 class Helicopter extends Movable implements Updatable {
-    Circle body;
-    Rectangle headingIndicator;
+    private Circle body;
+    private Rectangle headingPointer;
     Rectangle helicopter;
-    int maxSpeed = 10;
+    private GameText fuelText;
 
-
-    private final Point2D heliSize;
-    private static boolean ignitionOn;
-    private Point2D heliCenter;
-    private final Point2D padCenter;
     private boolean showBorder;
-    int fuel;
-    GameText fuelText;
-    HeloBody helibody;
-    HeloBlade heliblade;
 
-    Helicopter(Point2D padCenter, int fuel) {
+    private int fuel;
+    private static boolean ignitionOn = false;
+
+    private double heading = 0;
+    private double speed = 0;
+    private final Point2D padCenter;
+
+
+    public Helicopter(Point2D padCenter, int fuel){
         super();
-        heading = 0;
-        speed = 0;
-        showBorder = true;
-        this.fuel = fuel;
-        this.padCenter = padCenter;
-        heliSize = new Point2D(50, 100);
-        heliCenter = new Point2D(heliSize.getX()/2, heliSize.getY()/2);
-        ignitionOn = false;
 
+        this.padCenter = padCenter;
+        this.fuel = fuel;
+        showBorder = true;
 
         makeHelicopter();
-        //centerHeli();
-        makeBody();
-        //makeIndicator();
+        makeHelicopterBounds();
         initFuel();
 
+        this.translate(padCenter.getX(), padCenter.getY());
+        this.getTransforms().clear();
+        this.getTransforms().addAll(myTranslation);
     }
 
-    private void initFuel() {
+    @Override
+    public void move() {
+        updateFuel();
+
+        translate(
+                myTranslation.getX()
+                        + Math.sin(Math.toRadians(heading)) * -speed,
+                myTranslation.getY()
+                        + Math.cos(Math.toRadians(heading)) * speed
+        );
+
+        rotate(heading);
+
+        this.getTransforms().clear();
+        this.getTransforms().addAll(myTranslation, myRotation);
+    }
+
+    private void makeHelicopter(){
+        body = new Circle(15, Color.YELLOW);
+
+        headingPointer =
+                new Rectangle(body.getCenterX()-1, body.getCenterY(),
+                        3, body.getRadius()*3);
+        headingPointer.setFill(Color.YELLOW);
+
+        add(body);
+        add(headingPointer);
+    }
+
+    private void makeHelicopterBounds() {
+        helicopter = new Rectangle(
+                body.getCenterX() - body.getRadius(), // X
+                body.getCenterY() - body.getRadius(), // Y
+                body.getRadius()*2, // W
+                body.getRadius() + headingPointer.getHeight()); // H
+        helicopter.setStroke(Color.TRANSPARENT);
+        helicopter.setFill(Color.TRANSPARENT);
+
+        add(helicopter);
+    }
+
+    private void initFuel(){
         fuelText = new GameText(String.valueOf(fuel));
-        fuelText.setX(heliCenter.getX());
-        fuelText.setY(helibody.getTranslateY() - 105);
+        fuelText.setX(body.getCenterX() - 40);
+        fuelText.setY(body.getCenterY() - 20);
         fuelText.setFill(Color.YELLOW);
         add(fuelText);
     }
-    private void makeHelicopter() {
-        helicopter = new Rectangle(heliSize.getX(), heliSize.getY());
+
+    private void updateFuel(){
+        if (ignitionOn){
+            if (speed < 5)
+                fuel -= 10;
+            else
+                fuel -= 30;
+
+            checkFuel();
+        }
+        fuelText.setText("F: " + fuel);
+    }
+
+    private void checkFuel(){
+        if (fuel<= 0) {
+            speed = 0;
+        }
+    }
+
+    public void rotateLeft(){
+        if (ignitionOn)
+            heading += 15;
+    }
+
+    public void rotateRight(){
+        if (ignitionOn)
+            heading -= 15;
+    }
+
+    public void moveForward(){
+        if (ignitionOn) {
+            if (speed <= 10)
+                speed += .1;
+        }
+    }
+
+    public void moveBackward(){
+        if (ignitionOn) {
+            if (speed >= -2)
+                speed -= .1;
+        }
+    }
+
+    public void toggleBoundaries() {
+        showBorder = !showBorder;
         drawBoundaries();
-        centerHeli();
-        add(helicopter);
     }
 
     private void drawBoundaries(){
@@ -697,97 +809,24 @@ class Helicopter extends Movable implements Updatable {
         }
     }
 
-    private void centerHeli() {
-        heliCenter = new Point2D(
-                padCenter.getX() - heliSize.getX()/2,
-                padCenter.getY() - heliSize.getY()/2
-        );
-        helicopter.setX(heliCenter.getX());
-        helicopter.setY(heliCenter.getY());
+    public void toggleIgnition(){
+        ignitionOn = !ignitionOn;
     }
 
-    private void makeIndicator() {
-        headingIndicator = new Rectangle(
-                body.getCenterX() - 2,
-                body.getCenterY(),
-                5,
-                40
-        );
-        headingIndicator.setFill(Color.YELLOW);
-        add(headingIndicator);
-    }
-
-    private void makeBody(){
-        /*
-        body = new Circle(
-                heliCenter.getX() + heliSize.getX() / 2,
-                heliCenter.getY() + heliSize.getY() / 2,
-                10
-        );
-        body.setFill(Color.YELLOW);
-        add(body);
-
-         */
-        heliCenter = new Point2D(
-                padCenter.getX() - heliSize.getX()/2,
-                padCenter.getY() - heliSize.getY()/2
-        );
-
-        helibody = new HeloBody();
-        helibody.setTranslateX(heliCenter.getX() + heliSize.getX() / 2);
-        helibody.setTranslateY(heliCenter.getY() + heliSize.getY());
-
-        //heliblade = new HeloBlade(new Point2D(-2.5, -135));
-        heliblade = new HeloBlade(new Point2D(-2.5, -145)); //scale .5
-        heliblade.setTranslateX(heliCenter.getX() + heliSize.getX() / 2);
-        heliblade.setTranslateY(heliCenter.getY() + heliSize.getY());
-
-        helibody.setScaleX(.5);
-        helibody.setScaleY(.5);
-        heliblade.setScaleX(.5);
-        heliblade.setScaleY(.5);
-
-        add(helibody);
-        add(heliblade);
-    }
-
-    @Override
-    public void move() {
-        this.translate(0, speed);
-        updateFuel();
-    }
-
-    private void updateFuel(){
-        fuel -= Math.abs(speed * 25); // x25 fuel consumption
-        fuelText.setText(String.valueOf(fuel));
-        fuelText.setY(helibody.getTranslateY() - 105);
-    }
-
-    public void updateHeading(int update){
-        heading -= update;
-    }
-
-    public void updateSpeed(double s){
-        if(ignitionOn && Math.abs(speed) < maxSpeed){
-            speed += s;
-        }
-    }
     public static boolean isOn() {
         return ignitionOn;
     }
 
-    public static void toggleIgnition() {
-        ignitionOn = !ignitionOn;
-        System.out.println("Ignition on: " + ignitionOn);
-    }
-
-    public void toggleBoundaries() {
-        showBorder = !showBorder;
-        drawBoundaries();
-    }
-
     public int getFuel(){
         return fuel;
+    }
+
+    public double getSpeed(){
+        return speed;
+    }
+
+    public double getHeading(){
+        return heading;
     }
 
 }
