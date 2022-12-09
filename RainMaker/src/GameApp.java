@@ -770,12 +770,8 @@ class Helicopter extends Movable implements Updatable {
     private void makeBody(){
         helibody = new HeloBody();
 
-        helibody.setScaleX(.5);
-        helibody.setScaleY(.5);
-
-        helibody.setTranslateX(0);
-        helibody.setTranslateY(50);
-
+        helibody.scale(.5, .5);
+        helibody.translate(0, 22);
 
         add(helibody);
     }
@@ -783,12 +779,7 @@ class Helicopter extends Movable implements Updatable {
     private void makeBlade(){
         heliblade = new HeloBlade(new Point2D(-2.5, -145)); //scale .5
 
-        //heliblade.setScaleX(.5);
-        //heliblade.setScaleY(.5);
         heliblade.scale(.5, .5);
-
-        //heliblade.setTranslateX(0);
-        //heliblade.setTranslateY(50);
         heliblade.translate(0, 27);
 
         add(heliblade);
