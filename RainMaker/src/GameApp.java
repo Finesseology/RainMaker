@@ -615,7 +615,7 @@ class HeloBody extends Fixed{
     private void makeTailRotor(){
         tailRotor = new Rectangle(5, 40);
         tailRotorConnector = new Rectangle(20, 5);
-        tailRotor.setFill(paint);
+        tailRotor.setFill(Color.GREY);
         tailRotorConnector.setFill(paint);
         add(tailRotor);
         add(tailRotorConnector);
