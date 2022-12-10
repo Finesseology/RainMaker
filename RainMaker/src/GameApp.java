@@ -411,11 +411,16 @@ class Pond extends Fixed {
     }
 
     public void fillPond(double fillRate) {
+        if(percentage < 99){
             percentage += fillRate / 2;
+            growPond();
             text.setText(String.format("%.0f %%", percentage));
-
+        }
     }
 
+    private void growPond(){
+        circle.setRadius(circle.getRadius() + .2);
+    }
 }
 
 class Helipad extends Fixed {
