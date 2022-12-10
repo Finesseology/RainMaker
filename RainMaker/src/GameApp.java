@@ -66,7 +66,7 @@ public class GameApp extends Application {
 
 class Game extends Pane{
     private Pond pond;
-    private Cloud cloud;
+    private Cloud cloud, cloud2, cloud3;
     private Helicopter helicopter;
 
     private int frames;
@@ -94,9 +94,16 @@ class Game extends Pane{
             reset();
         }
         if(Helicopter.isOn()){
-            helicopter.move(); //left/right
+            helicopter.move(); //updates the helicopter with inputs
             if((int) cloud.getSaturation() > 0 && frames % 150 == 0){
                 cloud.desaturate();
+            }
+            //for simplicity, will change
+            if((int) cloud2.getSaturation() > 0 && frames % 150 == 0){
+                cloud2.desaturate();
+            }
+            if((int) cloud3.getSaturation() > 0 && frames % 150 == 0){
+                cloud3.desaturate();
             }
         }
     }
@@ -113,12 +120,12 @@ class Game extends Pane{
         pond = new Pond();
         cloud = new Cloud(gameSize);
         randomSize();
-        //cloud2 = new Cloud(gameSize);
+        cloud2 = new Cloud(gameSize);
         randomSize();
-        //cloud3 = new Cloud(gameSize);
+        cloud3 = new Cloud(gameSize);
         Helipad pad = new Helipad();
 
-        getChildren().addAll(pond, cloud, pad, helicopter);
+        getChildren().addAll(pond, cloud, cloud2, cloud3, pad, helicopter);
     }
 
     private void randomSize(){
@@ -156,6 +163,8 @@ class Game extends Pane{
     public void showBoundaries() {
         helicopter.toggleBoundaries();
         cloud.toggleBoundaries();
+        cloud2.toggleBoundaries();
+        cloud3.toggleBoundaries();
     }
 
     public void saturateCloud() {
@@ -166,6 +175,25 @@ class Game extends Pane{
                     cloud.saturate();
                     if (cloud.getSaturation() >= 30) {
                         pond.fillPond(cloud.getSaturation() * .05); //5%
+                    }
+                }
+            }
+            //again, will change later to scale correctly
+            if (!Shape.intersect(helicopter.helicopter,
+                    cloud2.circle).getBoundsInLocal().isEmpty()) {
+                if (cloud2.getSaturation() < 100) {
+                    cloud2.saturate();
+                    if (cloud2.getSaturation() >= 30) {
+                        pond.fillPond(cloud2.getSaturation() * .05); //5%
+                    }
+                }
+            }
+            if (!Shape.intersect(helicopter.helicopter,
+                    cloud3.circle).getBoundsInLocal().isEmpty()) {
+                if (cloud3.getSaturation() < 100) {
+                    cloud3.saturate();
+                    if (cloud3.getSaturation() >= 30) {
+                        pond.fillPond(cloud3.getSaturation() * .05); //5%
                     }
                 }
             }
