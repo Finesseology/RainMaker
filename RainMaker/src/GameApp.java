@@ -9,10 +9,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Arc;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
+import javafx.scene.shape.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
@@ -201,7 +198,7 @@ class Game extends Pane{
         if(Helicopter.isOn()) {
             for(Cloud cloud : clouds){
                 if(!Shape.intersect(helicopter.helicopter,
-                        cloud.circle).getBoundsInLocal().isEmpty()) {
+                        cloud.cloud).getBoundsInLocal().isEmpty()) {
                     if(cloud.getSaturation() < 100) {
                         cloud.saturate();
                         if(cloud.getSaturation() >= 30) { //5% fill rate
@@ -324,7 +321,7 @@ class Cloud extends Fixed {
     private Color color;
     private double radius;
     private double area;
-    Circle circle;
+    Ellipse cloud;
     private GameText text;
     private boolean showBorder;
     private Rectangle border;
@@ -342,28 +339,32 @@ class Cloud extends Fixed {
     }
 
     private void initCloud(){
-        circle = new Circle(radius);
+        cloud = new Ellipse(
+                getCords().getX(),
+                getCords().getY(),
+                radius * 1.65, //how long a cloud is
+                radius  //how tall a cloud is
+        );
         text = new GameText(String.format("%.0f %%", saturation));
         color = Color.rgb(255, 255, 255);
-        circle.setFill(Color.WHITE);
-        circle.setStroke(Color.BLACK);
-        circle.setStrokeWidth(2);
-        circle.setCenterX(getCords().getX());
-        circle.setCenterY(getCords().getY());
+        cloud.setFill(Color.WHITE);
+        cloud.setStroke(Color.BLACK);
+        cloud.setStrokeWidth(2);
+
         text.setFill(Color.BLUE);
         text.setX(getCords().getX() - 10);
         text.setY(getCords().getY() + 10);
 
-        add(circle);
+        add(cloud);
         add(text);
     }
 
     private void makeBorder(){
         border = new Rectangle(
-                circle.getCenterX() - circle.getRadius(),
-                circle.getCenterY() - circle.getRadius(),
-                circle.getRadius() * 2,
-                circle.getRadius() * 2
+                cloud.getCenterX() - cloud.getRadiusX(),
+                cloud.getCenterY() - cloud.getRadiusY(),
+                cloud.getRadiusX() * 2,
+                cloud.getRadiusY() * 2
         );
         drawBorder();
         add(border);
@@ -393,7 +394,7 @@ class Cloud extends Fixed {
                     (int) (255 * color.getGreen() - 1),
                     (int) (255 * color.getBlue() - 1 )
             );
-            circle.setFill(color);
+            cloud.setFill(color);
         }
     }
 
@@ -406,7 +407,7 @@ class Cloud extends Fixed {
                     (int) (255 * color.getGreen() + 1),
                     (int) (255 * color.getBlue() + 1 )
             );
-            circle.setFill(color);
+            cloud.setFill(color);
         }
     }
 
