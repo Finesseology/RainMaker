@@ -146,10 +146,19 @@ class Game extends Pane{
     }
 
     //Used to create a random gameSize for object placement
+    //Creates random point
     private void randomSize(){
-        gameSize = new Point2D(rand.nextInt((int) GameApp.windowSize.getX()),
-                rand.ints((int) (GameApp.windowSize.getY() / 3),
-                        (int) GameApp.windowSize.getY()).findFirst().getAsInt());
+        int buffer = 50; //buffer border for object spawns
+        gameSize = new Point2D(
+                rand.nextInt(
+                        buffer,
+                        (int) (GameApp.windowSize.getX() - buffer)
+                ),
+                rand.nextInt(
+                        (int) GameApp.windowSize.getY() / 3,
+                        (int) GameApp.windowSize.getY() - buffer
+                )
+        );
     }
 
     //resets the game world for new game
