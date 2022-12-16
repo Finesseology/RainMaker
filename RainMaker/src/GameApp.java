@@ -111,15 +111,15 @@ class Game extends Pane{
         helicopter = new Helicopter(new Point2D(Helipad.getCenter().getX(),
                 Helipad.getCenter().getY()), fuel);
 
-        randomSize();
+        randomizeSize();
         makeBackground();
 
         createClouds();
+        createPond();
 
-        pond = new Pond();
         Helipad pad = new Helipad();
 
-        getChildren().addAll(pond, pad, helicopter);
+        getChildren().addAll(pad, helicopter);
     }
 
     //Creates Cloud objects and stores them in ArrayList
@@ -127,12 +127,18 @@ class Game extends Pane{
         for(int i = 0; i < 3; i++){
             clouds.add(new Cloud(gameSize));
             getChildren().add(clouds.get(i));
-            randomSize();
+            randomizeSize();
         }
     }
 
+    //Creates Pond object
+    private void createPond(){
+        getChildren().add(new Pond(gameSize));
+        randomizeSize();
+    }
+
     //Used to create a random gameSize for object placement
-    private void randomSize(){
+    private void randomizeSize(){
         gameSize = new Point2D(rand.nextInt((int) GameApp.windowSize.getX()),
                 rand.ints((int) (GameApp.windowSize.getY() / 3),
                         (int) GameApp.windowSize.getY()).findFirst().getAsInt());
@@ -408,13 +414,8 @@ class Pond extends Fixed {
     private final Circle circle;
     private final GameText text;
 
-    static Random rand = new Random();
-    static Point2D cords = new Point2D(
-            rand.nextInt((int) GameApp.windowSize.getX()),
-            rand.ints((int) (GameApp.windowSize.getY() / 3),
-                    (int) GameApp.windowSize.getY()).findFirst().getAsInt());
 
-    public Pond() {
+    public Pond(Point2D cords) {
         super(cords);
         percentage = 20;
         radius = 25;
