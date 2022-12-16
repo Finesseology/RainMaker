@@ -22,6 +22,7 @@ import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 
@@ -65,8 +66,9 @@ public class GameApp extends Application {
 }
 
 class Game extends Pane{
+    private final ArrayList<Cloud> clouds = new ArrayList<>();
     private Pond pond;
-    private Cloud cloud, cloud2, cloud3;
+    //private Cloud cloud, cloud2, cloud3;
     private Helicopter helicopter;
 
     private int frames;
@@ -95,15 +97,10 @@ class Game extends Pane{
         }
         if(Helicopter.isOn()){
             helicopter.move(); //updates the helicopter with inputs
-            if((int) cloud.getSaturation() > 0 && frames % 150 == 0){
-                cloud.desaturate();
-            }
-            //for simplicity, will change
-            if((int) cloud2.getSaturation() > 0 && frames % 150 == 0){
-                cloud2.desaturate();
-            }
-            if((int) cloud3.getSaturation() > 0 && frames % 150 == 0){
-                cloud3.desaturate();
+            for(Cloud cloud : clouds){
+                if((int) cloud.getSaturation() > 0 && frames % 150 == 0){
+                    cloud.desaturate();
+                }
             }
         }
     }
@@ -117,89 +114,89 @@ class Game extends Pane{
         randomSize();
         makeBackground();
 
+        createClouds();
+
         pond = new Pond();
-        cloud = new Cloud(gameSize);
-        randomSize();
-        cloud2 = new Cloud(gameSize);
-        randomSize();
-        cloud3 = new Cloud(gameSize);
         Helipad pad = new Helipad();
 
-        getChildren().addAll(pond, cloud, cloud2, cloud3, pad, helicopter);
+        getChildren().addAll(pond, pad, helicopter);
     }
 
+    //Creates Cloud objects and stores them in ArrayList
+    private void createClouds(){
+        for(int i = 0; i < 3; i++){
+            clouds.add(new Cloud(gameSize));
+            getChildren().add(clouds.get(i));
+            randomSize();
+        }
+    }
+
+    //Used to create a random gameSize for object placement
     private void randomSize(){
         gameSize = new Point2D(rand.nextInt((int) GameApp.windowSize.getX()),
                 rand.ints((int) (GameApp.windowSize.getY() / 3),
                         (int) GameApp.windowSize.getY()).findFirst().getAsInt());
     }
 
+    //resets the game world for new game
     public void reset(){
         getChildren().clear();
+        clouds.clear();
         init();
     }
 
+    //Moves helicopter object to the left on key-press
     public void moveLeft(){
         helicopter.rotateLeft();
     }
 
+    //Moves helicopter object to the right on key-press
     public void moveRight(){
         helicopter.rotateRight();
     }
 
+    //Moves helicopter object forward on key-press
     public void moveForward(){
         helicopter.moveForward();
     }
 
+    //Moves helicopter object backwards on key-press
     public void moveBackward(){
         helicopter.moveBackward();
     }
 
-
+    //Turns on the helicopter
     public void toggleIgnition() {
         helicopter.toggleIgnition();
     }
 
+    //On 'B' press, shows the boundaries of game objects
     public void showBoundaries() {
         helicopter.toggleBoundaries();
-        cloud.toggleBoundaries();
-        cloud2.toggleBoundaries();
-        cloud3.toggleBoundaries();
+        for(int i = 0; i < clouds.size(); i++){
+            ((Cloud) getChildren().get(i)).toggleBoundaries();
+        }
     }
 
+    //If the helicopter is on and pressing space, decreases cloud
+    //saturation and fills the pond
     public void saturateCloud() {
         if(Helicopter.isOn()) {
-            if (!Shape.intersect(helicopter.helicopter,
-                    cloud.circle).getBoundsInLocal().isEmpty()) {
-                if (cloud.getSaturation() < 100) {
-                    cloud.saturate();
-                    if (cloud.getSaturation() >= 30) {
-                        pond.fillPond(cloud.getSaturation() * .05); //5%
-                    }
-                }
-            }
-            //again, will change later to scale correctly
-            if (!Shape.intersect(helicopter.helicopter,
-                    cloud2.circle).getBoundsInLocal().isEmpty()) {
-                if (cloud2.getSaturation() < 100) {
-                    cloud2.saturate();
-                    if (cloud2.getSaturation() >= 30) {
-                        pond.fillPond(cloud2.getSaturation() * .05); //5%
-                    }
-                }
-            }
-            if (!Shape.intersect(helicopter.helicopter,
-                    cloud3.circle).getBoundsInLocal().isEmpty()) {
-                if (cloud3.getSaturation() < 100) {
-                    cloud3.saturate();
-                    if (cloud3.getSaturation() >= 30) {
-                        pond.fillPond(cloud3.getSaturation() * .05); //5%
+            for(Cloud cloud : clouds){
+                if(!Shape.intersect(helicopter.helicopter,
+                        cloud.circle).getBoundsInLocal().isEmpty()) {
+                    if(cloud.getSaturation() < 100) {
+                        cloud.saturate();
+                        if(cloud.getSaturation() >= 30) { //5% fill rate
+                            pond.fillPond(cloud.getSaturation() * .05);
+                        }
                     }
                 }
             }
         }
     }
 
+    //Creates a scalable background from a png
     private void makeBackground(){
         //https://opengameart.org/node/10024
         //image is 500x500 and repeats seamlessly
