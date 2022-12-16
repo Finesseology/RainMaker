@@ -73,9 +73,11 @@ class Game extends Pane{
 
     private int frames;
     Random rand = new Random();
-    Point2D gameSize = new Point2D(rand.nextInt((int) GameApp.windowSize.getX()),
+    Point2D gameSize = new Point2D(
+            rand.nextInt((int) GameApp.windowSize.getX()),
             rand.ints((int) (GameApp.windowSize.getY() / 3),
-                    (int) GameApp.windowSize.getY()).findFirst().getAsInt());
+            (int) GameApp.windowSize.getY()).findFirst().getAsInt()
+    );
 
 
     Game(){
@@ -108,18 +110,14 @@ class Game extends Pane{
     private void init(){
         int fuel = 25000;
         frames = 0;
-        helicopter = new Helicopter(new Point2D(Helipad.getCenter().getX(),
-                Helipad.getCenter().getY()), fuel);
 
         randomSize();
         makeBackground();
 
         createClouds();
-
-        pond = new Pond();
-        Helipad pad = new Helipad();
-
-        getChildren().addAll(pond, pad, helicopter);
+        createPond();
+        createHelipad();
+        createHelicopter(fuel);
     }
 
     //Creates Cloud objects and stores them in ArrayList
@@ -129,6 +127,25 @@ class Game extends Pane{
             getChildren().add(clouds.get(i));
             randomSize();
         }
+    }
+
+    //Creates Pond object
+    private void createPond(){
+        pond = new Pond(gameSize);
+        getChildren().add(pond);
+        randomSize();
+    }
+
+    //Creates Helipad Object
+    private void createHelipad(){
+        getChildren().add(new Helipad());
+    }
+
+    //Creates Helicopter Object
+    private void createHelicopter(int fuel){
+        helicopter = new Helicopter(new Point2D(Helipad.getCenter().getX(),
+                Helipad.getCenter().getY()), fuel);
+        getChildren().add(helicopter);
     }
 
     //Used to create a random gameSize for object placement
@@ -408,13 +425,8 @@ class Pond extends Fixed {
     private final Circle circle;
     private final GameText text;
 
-    static Random rand = new Random();
-    static Point2D cords = new Point2D(
-            rand.nextInt((int) GameApp.windowSize.getX()),
-            rand.ints((int) (GameApp.windowSize.getY() / 3),
-                    (int) GameApp.windowSize.getY()).findFirst().getAsInt());
 
-    public Pond() {
+    public Pond(Point2D cords) {
         super(cords);
         percentage = 20;
         radius = 25;
