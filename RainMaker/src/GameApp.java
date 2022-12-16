@@ -42,19 +42,16 @@ public class GameApp extends Application {
         //stage.setResizable(false);
         stage.show();
 
-        scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                switch (event.getCode()) {
-                    case LEFT -> game.moveLeft();
-                    case RIGHT -> game.moveRight();
-                    case UP -> game.moveForward();
-                    case DOWN -> game.moveBackward();
-                    case I -> game.toggleIgnition();
-                    case B -> game.showBoundaries();
-                    case R -> game.reset();
-                    case SPACE -> game.saturateCloud();
-                }
+        scene.setOnKeyPressed(event -> {
+            switch (event.getCode()) {
+                case LEFT -> game.moveLeft();
+                case RIGHT -> game.moveRight();
+                case UP -> game.moveForward();
+                case DOWN -> game.moveBackward();
+                case I -> game.toggleIgnition();
+                case B -> game.showBoundaries();
+                case R -> game.reset();
+                case SPACE -> game.saturateCloud();
             }
         });
     }
@@ -65,21 +62,14 @@ public class GameApp extends Application {
 class Game extends Pane{
     private final ArrayList<Cloud> clouds = new ArrayList<>();
     private Pond pond;
-    //private Cloud cloud, cloud2, cloud3;
     private Helicopter helicopter;
-
     private int frames;
-    Random rand = new Random();
-    Point2D gameSize = new Point2D(
-            rand.nextInt((int) GameApp.windowSize.getX()),
-            rand.ints((int) (GameApp.windowSize.getY() / 3),
-            (int) GameApp.windowSize.getY()).findFirst().getAsInt()
-    );
+    private final Random rand = new Random();
+    private Point2D gameSize;
 
 
     Game(){
         init();
-        //start game loop
         AnimationTimer loop = new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -95,11 +85,15 @@ class Game extends Pane{
             reset();
         }
         if(Helicopter.isOn()){
-            helicopter.move(); //updates the helicopter with inputs
-            for(Cloud cloud : clouds){
-                if((int) cloud.getSaturation() > 0 && frames % 150 == 0){
-                    cloud.desaturate();
-                }
+            updateObjects();
+        }
+    }
+
+    private void updateObjects(){
+        helicopter.move(); //updates the helicopter with inputs
+        for(Cloud cloud : clouds){
+            if((int) cloud.getSaturation() > 0 && frames % 150 == 0){
+                cloud.desaturate();
             }
         }
     }
