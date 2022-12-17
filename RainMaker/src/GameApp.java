@@ -707,12 +707,14 @@ class HeloBlade extends GameObject{
         spin();
     }
 
+    //Initializes values and creates blade
     private void init(){
         bladeSpeed = 0;
         makeBlade();
         positionPieces();
     }
 
+    //Spins the helicopter blades when turned on
     private void spin(){
         AnimationTimer loop = new AnimationTimer() {
             @Override
@@ -723,6 +725,7 @@ class HeloBlade extends GameObject{
         loop.start();
     }
 
+    //Centers the blade over the correct positions
     private void positionPieces() {
         blade.setX(heliCenter.getX());
         blade.setY(heliCenter.getY());
@@ -733,6 +736,7 @@ class HeloBlade extends GameObject{
         bladeCenter.setCenterY(blade.getY() + blade.getHeight() / 2);
     }
 
+    //Creates the blade object
     private void makeBlade() {
         blade = new Rectangle(5, 200);
         bladeCenter = new Circle(3, Color.BLACK);
@@ -740,6 +744,7 @@ class HeloBlade extends GameObject{
         this.getChildren().addAll(blade, bladeCenter);
     }
 
+    //Updates the blades speed for the blade state
     public void update(int bladeSpeed){
         this.bladeSpeed = bladeSpeed;
     }
@@ -953,12 +958,6 @@ class GameText extends GameObject {
 
 
 
-
-
-
-
-
-
 abstract class HelicopterState {
     static int maxSpeed = 10;
     Helicopter helicopter;
@@ -970,6 +969,7 @@ abstract class HelicopterState {
     abstract void Ignition();
     abstract int Blades(int bladeSpeed);
 }
+
 class Off extends HelicopterState {
     Off(Helicopter helicopter){
         super(helicopter);
