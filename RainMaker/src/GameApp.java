@@ -82,7 +82,8 @@ class Game extends Pane{
     }
 
     private void run(){
-        moveClouds();
+        updateClouds();
+        updateHelicopter();
         if(helicopter.getFuel() <= 0){
             reset();
         }
@@ -91,14 +92,17 @@ class Game extends Pane{
         }
     }
 
-    private void moveClouds(){
+    private void updateClouds(){
         for(Cloud cloud : clouds){
             cloud.move();
         }
     }
 
-    private void updateObjects(){
+    private void updateHelicopter(){
         helicopter.move(); //updates the helicopter with inputs
+    }
+
+    private void updateObjects(){
         for(Cloud cloud : clouds){
             if((int) cloud.getSaturation() > 0 && frames % 150 == 0){
                 cloud.desaturate();
@@ -690,21 +694,33 @@ class HeloBody extends Fixed{
 
 }
 
-class HeloBlade extends Movable{
+//Creates a blade and spins the blade when turned on
+class HeloBlade extends GameObject{
     private Rectangle blade;
     private Circle bladeCenter;
     private final Point2D heliCenter;
-    private double bladeSpeed;
+    private int bladeSpeed;
 
     HeloBlade(Point2D heliCenter){
         this.heliCenter = heliCenter;
         init();
+        spin();
     }
 
     private void init(){
-        bladeSpeed = 0.0;
+        bladeSpeed = 0;
         makeBlade();
         positionPieces();
+    }
+
+    private void spin(){
+        AnimationTimer loop = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                blade.setRotate(blade.getRotate() + bladeSpeed);
+            }
+        };
+        loop.start();
     }
 
     private void positionPieces() {
@@ -721,16 +737,12 @@ class HeloBlade extends Movable{
         blade = new Rectangle(5, 200);
         bladeCenter = new Circle(3, Color.BLACK);
         blade.setFill(Color.GREY);
-        add(blade);
-        add(bladeCenter);
+        this.getChildren().addAll(blade, bladeCenter);
     }
 
-    @Override
-    public void move() {
-        blade.setRotate(blade.getRotate() + 0.01);
-        //this.rotate(this.getMyRotation() + 0.1);
+    public void update(int bladeSpeed){
+        this.bladeSpeed = bladeSpeed;
     }
-
 
 }
 
@@ -747,13 +759,18 @@ class Helicopter extends Movable implements Updatable {
     private double speed = 0;
     HeloBody helibody;
     HeloBlade heliblade;
-
+    HelicopterState state;
+    int bladeSpeed = 0;
+    int maxSpeed = 10;
+    int minSpeed = -2;
 
     public Helicopter(Point2D padCenter, int fuel){
         super();
 
         this.fuel = fuel;
         showBorder = false;
+
+        state = new Off(this);
 
         makeHelicopter();
         makeBorder();
@@ -766,8 +783,8 @@ class Helicopter extends Movable implements Updatable {
 
     @Override
     public void move() {
-        updateFuel();
-        updateBlade();
+        this.getTransforms().clear();
+        rotate(heading);
 
         translate(
                 myTranslation.getX()
@@ -775,23 +792,12 @@ class Helicopter extends Movable implements Updatable {
                 myTranslation.getY()
                         + Math.cos(Math.toRadians(heading)) * speed
         );
-
-        rotate(heading);
-
-        this.getTransforms().clear();
         this.getTransforms().addAll(myTranslation, myRotation);
-    }
 
-    private void updateBlade() {
-        if(ignitionOn){
-            AnimationTimer loop = new AnimationTimer() {
-                @Override
-                public void handle(long now) {
-                    heliblade.move(); //eventually pass in state
-                }
-            };
-            loop.start();
-        }
+        bladeSpeed = state.Blades(bladeSpeed);
+        heliblade.update(bladeSpeed);
+
+        updateFuel();
     }
 
     private void makeHelicopter() {
@@ -835,40 +841,43 @@ class Helicopter extends Movable implements Updatable {
         add(fuelText);
     }
 
-
+    //Fuel usage that scales with helicopter speed
     private void updateFuel(){
-        if(ignitionOn){
-            if(speed < 5){
-                fuel -= Math.abs(speed * 2); // x25 fuel consumption
+        if(state instanceof Ready){
+            if(Math.abs(speed - 0.0) < 0.001){  //idle fuel
+                fuel -= 10;
             }
-            else{
-                fuel -= Math.abs(speed * 5); // x25 fuel consumption
+            else if(speed < maxSpeed / 2){      //helicopter moves slowly
+                fuel -= Math.abs(speed * 2);
+            }
+            else{                               //helicopter moves fast
+                fuel -= Math.abs(speed * 5);    // x25 fuel consumption
             }
             fuelText.setText(String.valueOf(fuel));
         }
     }
 
     public void rotateLeft(){
-        if (ignitionOn)
+        if(state instanceof Ready){
             heading += 15;
+        }
     }
 
     public void rotateRight(){
-        if (ignitionOn)
+        if(state instanceof Ready){
             heading -= 15;
+        }
     }
 
     public void moveForward(){
-        if (ignitionOn) {
-            if (speed <= 10)
-                speed += .1;
+        if(state instanceof Ready && speed <= maxSpeed){
+            speed += .1;
         }
     }
 
     public void moveBackward(){
-        if (ignitionOn) {
-            if (speed >= -2)
-                speed -= .1;
+        if(state instanceof Ready && speed >= minSpeed){
+            speed -= .1;
         }
     }
 
@@ -890,6 +899,7 @@ class Helicopter extends Movable implements Updatable {
 
     public void toggleIgnition(){
         ignitionOn = !ignitionOn;
+        state.Ignition();
     }
 
     public static boolean isOn() {
@@ -900,12 +910,8 @@ class Helicopter extends Movable implements Updatable {
         return fuel;
     }
 
-    public double getSpeed(){
-        return speed;
-    }
-
-    public double getHeading(){
-        return heading;
+    public void changeState(HelicopterState state){
+        this.state = state;
     }
 
 }
@@ -938,6 +944,105 @@ class GameText extends GameObject {
         text.setY(y);
     }
 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+abstract class HelicopterState {
+    static int maxSpeed = 10;
+    Helicopter helicopter;
+
+    HelicopterState(Helicopter helicopter){
+        this.helicopter = helicopter;
+    }
+
+    abstract void Ignition();
+    abstract int Blades(int bladeSpeed);
+}
+class Off extends HelicopterState {
+    Off(Helicopter helicopter){
+        super(helicopter);
+    }
+
+    @Override
+    void Ignition(){
+        helicopter.changeState(new Starting(helicopter));
+    }
+
+    @Override
+    int Blades(int bladeSpeed){
+        return 0;
+    }
+}
+
+class Starting extends HelicopterState {
+    Starting(Helicopter heli){
+        super(heli);
+    }
+    @Override
+    void Ignition(){
+        helicopter.changeState(new Stopping(helicopter));
+    }
+
+    @Override
+    int Blades(int bladeSpeed){
+        if(bladeSpeed < maxSpeed){
+            bladeSpeed++;
+        }
+        if(bladeSpeed == maxSpeed){
+            helicopter.changeState(new Ready(helicopter));
+        }
+
+        return bladeSpeed;
+    }
+}
+
+class Stopping extends HelicopterState {
+    Stopping(Helicopter heli){
+        super(heli);
+    }
+    @Override
+    void Ignition(){
+        helicopter.changeState(new Starting(helicopter));
+    }
+
+    @Override
+    int Blades(int bladeSpeed){
+        if(bladeSpeed > 0)
+            bladeSpeed--;
+
+        if(bladeSpeed == 0)
+            helicopter.changeState(new Off(helicopter));
+
+        return 0;
+    }
+}
+
+class Ready extends HelicopterState {
+    Ready(Helicopter heli){
+        super(heli);
+    }
+
+    @Override
+    void Ignition(){
+        helicopter.changeState(new Stopping(helicopter));
+    }
+
+    @Override
+    int Blades(int bladeSpeed){
+        return maxSpeed; //returns to max speed
+    }
 }
 
 
