@@ -1,12 +1,10 @@
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
@@ -21,6 +19,7 @@ import javafx.scene.Scene;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 
 public class GameApp extends Application {
@@ -66,6 +65,8 @@ class Game extends Pane{
     private int frames;
     private final Random rand = new Random();
     private Point2D gameSize;
+    static double WIND_SPEED = 1;
+    static double WIND_DIRECTION = 45;
 
 
     Game(){
@@ -81,11 +82,18 @@ class Game extends Pane{
     }
 
     private void run(){
+        moveClouds();
         if(helicopter.getFuel() <= 0){
             reset();
         }
         if(Helicopter.isOn()){
             updateObjects();
+        }
+    }
+
+    private void moveClouds(){
+        for(Cloud cloud : clouds){
+            cloud.move();
         }
     }
 
@@ -105,8 +113,8 @@ class Game extends Pane{
         randomSize();
         makeBackground();
 
-        createClouds();
         createPond();
+        createClouds();
         createHelipad();
         createHelicopter(fuel);
     }
@@ -114,7 +122,7 @@ class Game extends Pane{
     //Creates Cloud objects and stores them in ArrayList
     private void createClouds(){
         for(int i = 0; i < 3; i++){
-            clouds.add(new Cloud(gameSize));
+            clouds.add(new Cloud(gameSize, WIND_SPEED, WIND_DIRECTION));
             getChildren().add(clouds.get(i));
             randomSize();
         }
@@ -190,8 +198,8 @@ class Game extends Pane{
     //On 'B' press, shows the boundaries of game objects
     public void showBoundaries() {
         helicopter.toggleBoundaries();
-        for(int i = 0; i < clouds.size(); i++){
-            ((Cloud) getChildren().get(i)).toggleBoundaries();
+        for(Cloud cloud : clouds){
+            cloud.toggleBoundaries();
         }
     }
 
@@ -316,9 +324,10 @@ abstract class Movable extends GameObject{
     }
 
     public abstract void move();
+
 }
 
-class Cloud extends Fixed {
+class Cloud extends Movable {
 
     private double saturation;
     private Color color;
@@ -330,8 +339,10 @@ class Cloud extends Fixed {
     private Rectangle border;
 
 
-    public Cloud(Point2D cords) {
+    public Cloud(Point2D cords, double speed, double heading) {
         super(cords);
+        this.speed = speed;
+        this.heading = heading;
         saturation = 0;
         radius = 50;
         area = Math.PI * Math.pow(radius, 2);
@@ -358,8 +369,14 @@ class Cloud extends Fixed {
         text.setX(getCords().getX() - 10);
         text.setY(getCords().getY() + 10);
 
+        randomizeSpeed();
+
         add(cloud);
         add(text);
+    }
+
+    private void randomizeSpeed(){
+        speed = ThreadLocalRandom.current().nextDouble(.5, 1.5);
     }
 
     private void makeBorder(){
@@ -414,11 +431,20 @@ class Cloud extends Fixed {
         }
     }
 
-
     public void toggleBoundaries() {
         showBorder = !showBorder;
         drawBorder();
     }
+
+    @Override
+    public void move(){
+        translate(
+                myTranslation.getX()
+                        + heading * speed / 200, //scale cloud movement by 100
+                0
+        );
+    }
+
 }
 
 class Pond extends Fixed {
@@ -668,6 +694,7 @@ class HeloBlade extends Movable{
     private Rectangle blade;
     private Circle bladeCenter;
     private final Point2D heliCenter;
+    private double bladeSpeed;
 
     HeloBlade(Point2D heliCenter){
         this.heliCenter = heliCenter;
@@ -675,6 +702,7 @@ class HeloBlade extends Movable{
     }
 
     private void init(){
+        bladeSpeed = 0.0;
         makeBlade();
         positionPieces();
     }
@@ -702,6 +730,7 @@ class HeloBlade extends Movable{
         blade.setRotate(blade.getRotate() + 0.01);
         //this.rotate(this.getMyRotation() + 0.1);
     }
+
 
 }
 
@@ -910,6 +939,7 @@ class GameText extends GameObject {
     }
 
 }
+
 
 
 
