@@ -121,7 +121,7 @@ class Game extends Pane{
     private void createWinWindow(){
         Stage stage = new Stage();
         VBox root = new VBox();
-        Scene scene = new Scene(root, 600, 500);
+        Scene scene = new Scene(root, 600, 550);
         stage.setScene(scene);
         stage.setTitle("You win!");
         stage.show();
@@ -162,7 +162,7 @@ class Game extends Pane{
                 && pond.isFull()
                 && helicopter.getState() instanceof Off
                 && !Shape.intersect(helicopter.getBorder(),
-                    helipad.padSquare).getBoundsInLocal().isEmpty()){
+                    helipad.padBorder()).getBoundsInLocal().isEmpty()){
             createWinWindow();
             reset();
         }
@@ -180,7 +180,7 @@ class Game extends Pane{
     private void createLossWindow(){
         Stage stage = new Stage();
         VBox root = new VBox();
-        Scene scene = new Scene(root, 600, 500);
+        Scene scene = new Scene(root, 600, 550);
         stage.setScene(scene);
         stage.setTitle("Game over");
         stage.show();
@@ -477,7 +477,6 @@ abstract class Movable extends GameObject{
 }
 
 class Cloud extends Movable {
-
     private double saturation;
     private Color color;
     private final double radius;
@@ -609,10 +608,11 @@ class Cloud extends Movable {
 
     public void respawn(){
         randomSpawn();
-        color = Color.rgb(255, 255, 255);
+        saturation = 0;
+        text.setText(String.format("%.0f %%", saturation));
+        cloud.setFill(Color.WHITE);
         this.setTranslateX(spawn.getX());
         this.setTranslateY(spawn.getY());
-        saturation = 0;
     }
 
     @Override
@@ -623,7 +623,6 @@ class Cloud extends Movable {
     public Rectangle getBorder(){
         return border;
     }
-
 
     public double getSpeed(){
         return speed;
@@ -640,7 +639,6 @@ class Cloud extends Movable {
 }
 
 class Pond extends Fixed {
-
     private double radius;
     private double area;
     private double percentage;
@@ -651,7 +649,7 @@ class Pond extends Fixed {
     public Pond(Point2D cords) {
         super(cords);
         percentage = 20;
-        radius = 25;
+        radius = 40;
         area = Math.PI * Math.pow(radius, 2);
 
         pond = new Circle(radius);
@@ -692,11 +690,9 @@ class Pond extends Fixed {
 }
 
 class Helipad extends Fixed {
-    Circle padCircle;
-    Rectangle padSquare;
+    private Rectangle padSquare;
     private final int radius;
     private final Point2D padSize;
-    private ImageView padView;
 
     private static final Point2D center = new Point2D(
             GameApp.windowSize.getX() / 2,
@@ -717,7 +713,7 @@ class Helipad extends Fixed {
     }
 
     private void makeHeliImage(){
-        padView = new ImageView();
+        ImageView padView = new ImageView();
 
         padView.setImage(new Image("heliport.png"));
         padView.setFitWidth(padSize.getX());
@@ -742,7 +738,7 @@ class Helipad extends Fixed {
     }
 
     private void makeCircle(){
-        padCircle = new Circle(center.getX(), center.getY(), radius);
+        Circle padCircle = new Circle(center.getX(), center.getY(), radius);
         padCircle.setStroke(Color.GRAY);
         padCircle.setStrokeWidth(2);
         padCircle.setFill(Color.TRANSPARENT);
@@ -752,10 +748,14 @@ class Helipad extends Fixed {
     public static Point2D getCenter(){
         return center;
     }
+
+    public Rectangle padBorder(){
+        return padSquare;
+    }
 }
 
 class HeloBody extends Fixed{
-    private Circle body, rotorCenter;
+    private Circle rotorCenter;
     private Rectangle rotorMain;
     private Rectangle leftSkid, rightSkid;
     private Rectangle leftSkidConnectorFront, leftSkidConnectorBack,
@@ -824,7 +824,7 @@ class HeloBody extends Fixed{
     }
 
     private void makeBody(){
-        body = new Circle();
+        Circle body = new Circle();
         body.setRadius(40);
         body.setFill(paint);
         add(body);
@@ -951,9 +951,7 @@ class HeloBlade extends GameObject{
 class Helicopter extends Movable implements Updatable {
     private Rectangle helicopter;
     private GameText fuelText;
-
     private boolean showBorder;
-
     private int fuel;
     private double heading = 0;
     private double speed = 0;
@@ -1123,6 +1121,20 @@ class Helicopter extends Movable implements Updatable {
     public Rectangle getBorder(){
         return helicopter;
     }
+
+    public Point2D getCenter(){
+        /*
+        return new Point2D(
+                helicopter.getX() + this.getTranslateX(),
+                helicopter.getY() + this.getTranslateY()
+        );
+
+         */
+        return new Point2D(
+                ( helicopter.getX() + helicopter.getWidth() / 2 ) + this.getTranslateX(),
+                helicopter.getY()
+        );
+    }
 }
 
 class GameText extends GameObject {
@@ -1161,7 +1173,7 @@ class Lines extends GameObject implements Updatable{
     Cloud cloud;
     Pond pond;
     Helicopter helicopter;
-    Line line;
+    Line line, line2;
     boolean showLine;
 
     public Lines(Cloud cloud, Pond pond){
@@ -1191,7 +1203,6 @@ class Lines extends GameObject implements Updatable{
                 pond.getCenter().getX(),
                 pond.getCenter().getY()
         );
-
         line.setStrokeWidth(2);
         add(line);
     }
