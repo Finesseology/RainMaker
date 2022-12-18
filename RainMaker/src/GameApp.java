@@ -214,8 +214,9 @@ class Game extends Pane{
     //Updates all of the cloud movements
     private void updateClouds(){
         for(Cloud cloud : clouds){
+            //if the cloud is offscreen, it is dead
             if(cloud.getTranslateX()
-                    > GameApp.windowSize.getX() + cloud.getSize()){
+                    > GameApp.windowSize.getX() + cloud.getSize() * 4){
                 cloud.changeState(new CloudDead(cloud));
             }
             cloud.move();
@@ -238,11 +239,16 @@ class Game extends Pane{
 
     //Creates Cloud objects and stores them in ArrayList
     private void createClouds(){
-        for(int i = 0; i < 3; i++){
-            clouds.add(new Cloud(gameSize, WIND_SPEED, WIND_DIRECTION));
-            getChildren().add(clouds.get(i));
-            randomSize();
+        for(int i = 0; i < 4; i++){
+            createCloud();
         }
+    }
+
+    private void createCloud(){
+        Cloud cloud = new Cloud(gameSize, WIND_SPEED, WIND_DIRECTION);
+        clouds.add(cloud);
+        getChildren().add(cloud);
+        randomSize();
     }
 
     //Creates Pond object
@@ -446,33 +452,35 @@ class Cloud extends Movable {
 
     private double saturation;
     private Color color;
-    private double radius;
-    private double area;
+    private final double radius;
     Ellipse cloud;
     private GameText text;
     private boolean showBorder;
     private Rectangle border;
     private CloudState state;
+    private Random rand = new Random();
+    private Point2D spawn;
 
 
     public Cloud(Point2D cords, double speed, double heading) {
-        super(cords);
+        super();
         this.speed = speed;
         this.heading = heading;
         saturation = 0;
         radius = 50;
-        area = Math.PI * Math.pow(radius, 2);
         showBorder = false;
+        spawn = new Point2D(0, 0);
         state = new CloudAlive(this);
 
+        randomSpawn();
         initCloud();
         makeBorder();
     }
 
     private void initCloud(){
         cloud = new Ellipse(
-                getCords().getX(),
-                getCords().getY(),
+                spawn.getX(), //clouds now spawn at x = 0
+                spawn.getY(),
                 radius * 1.65, //how long a cloud is
                 radius  //how tall a cloud is
         );
@@ -483,13 +491,28 @@ class Cloud extends Movable {
         cloud.setStrokeWidth(2);
 
         text.setFill(Color.BLUE);
-        text.setX(getCords().getX() - 10);
-        text.setY(getCords().getY() + 10);
+        text.setX(spawn.getX() - 10);
+        text.setY(spawn.getY() + 10);
 
         randomizeSpeed();
-
         add(cloud);
         add(text);
+    }
+
+    private void randomSpawn(){
+        int oldY = (int) spawn.getY();
+        spawn = new Point2D(
+                -radius * 2,
+                rand.nextInt(
+                        250,
+                        500
+                )
+        );
+        if((spawn.getY() - oldY) < 50){
+            randomSpawn();
+        }
+
+        System.out.println("> " + spawn);
     }
 
     private void randomizeSpeed(){
@@ -559,18 +582,11 @@ class Cloud extends Movable {
     }
 
     public void respawn(){
-        if(state instanceof CloudAlive){
-            System.out.println("> " + cloud.getTranslateX());
-        }
-        System.out.println(state);
-        translate(
-                -200, //spawn 200 points left of screen
-                500
-        );
-    }
-
-    public void update(){
-        state.updateCloud();
+        randomSpawn();
+        color = Color.rgb(255, 255, 255);
+        this.setTranslateX(spawn.getX());
+        this.setTranslateY(spawn.getY());
+        saturation = 0;
     }
 
     @Override
@@ -582,9 +598,6 @@ class Cloud extends Movable {
         return border;
     }
 
-    public double getHeading(){
-        return heading;
-    }
 
     public double getSpeed(){
         return speed;
@@ -1217,7 +1230,6 @@ class CloudAlive extends CloudState {
     @Override
     void updateCloud() {
         cloud.setTranslateX(cloud.getTranslateX() + cloud.getSpeed() * .3);
-        System.out.println(cloud.getTranslateX());
     }
 }
 
