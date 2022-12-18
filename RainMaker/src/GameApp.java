@@ -56,15 +56,16 @@ public class GameApp extends Application {
                 case B -> game.showBoundaries();
                 case R -> game.reset();
                 case SPACE -> game.saturateCloud();
+                case D -> game.showLines();
             }
         });
     }
-
-
 }
 
 class Game extends Pane{
     private final ArrayList<Cloud> clouds = new ArrayList<>();
+    private final ArrayList<Pond> ponds = new ArrayList<>();
+    private final ArrayList<Lines> lines = new ArrayList<>();
     private Pond pond;
     private Helicopter helicopter;
     private Helipad helipad;
@@ -99,12 +100,15 @@ class Game extends Pane{
         createClouds();
         createHelipad();
         createHelicopter(fuel);
+        createLines();
     }
 
     //main logic for running the game
     private void run(){
-        updateClouds();
         updateHelicopter();
+        updateClouds();
+        updateLines();
+
         checkWinCondition();
         checkLossCondition();
 
@@ -237,6 +241,12 @@ class Game extends Pane{
         }
     }
 
+    private void updateLines(){
+        for(Lines line : lines){
+            line.update();
+        }
+    }
+
     //Creates Cloud objects and stores them in ArrayList
     private void createClouds(){
         for(int i = 0; i < 4; i++){
@@ -245,7 +255,7 @@ class Game extends Pane{
     }
 
     private void createCloud(){
-        Cloud cloud = new Cloud(gameSize, WIND_SPEED, WIND_DIRECTION);
+        Cloud cloud = new Cloud(WIND_SPEED, WIND_DIRECTION);
         clouds.add(cloud);
         getChildren().add(cloud);
         randomSize();
@@ -271,6 +281,16 @@ class Game extends Pane{
         getChildren().add(helicopter);
     }
 
+    //Creates a new line between cloud and pond objects
+    private void createLines(){
+        for(Cloud cloud : clouds){
+            lines.add(new Lines(cloud, pond));
+        }
+        for(Lines line : lines){
+            getChildren().add(line);
+        }
+    }
+
     //Used to create a random gameSize for object placement
     //Creates random point
     private void randomSize(){
@@ -291,6 +311,7 @@ class Game extends Pane{
     public void reset(){
         getChildren().clear();
         clouds.clear();
+        lines.clear();
         init();
     }
 
@@ -324,6 +345,13 @@ class Game extends Pane{
         helicopter.toggleBoundaries();
         for(Cloud cloud : clouds){
             cloud.toggleBoundaries();
+        }
+    }
+
+    //Toggles the lines between objects on and off
+    public void showLines(){
+        for(Lines line : lines){
+            line.toggleVisibility();
         }
     }
 
@@ -453,16 +481,16 @@ class Cloud extends Movable {
     private double saturation;
     private Color color;
     private final double radius;
-    Ellipse cloud;
+    private Ellipse cloud;
     private GameText text;
     private boolean showBorder;
     private Rectangle border;
     private CloudState state;
-    private Random rand = new Random();
+    private final Random rand = new Random();
     private Point2D spawn;
 
 
-    public Cloud(Point2D cords, double speed, double heading) {
+    public Cloud(double speed, double heading) {
         super();
         this.speed = speed;
         this.heading = heading;
@@ -511,8 +539,6 @@ class Cloud extends Movable {
         if((spawn.getY() - oldY) < 50){
             randomSpawn();
         }
-
-        System.out.println("> " + spawn);
     }
 
     private void randomizeSpeed(){
@@ -607,6 +633,10 @@ class Cloud extends Movable {
         return radius;
     }
 
+    public Point2D getCenter(){
+        return new Point2D(cloud.getCenterX() + this.getTranslateX(),
+                cloud.getCenterY() + this.getTranslateY());
+    }
 }
 
 class Pond extends Fixed {
@@ -614,7 +644,7 @@ class Pond extends Fixed {
     private double radius;
     private double area;
     private double percentage;
-    private final Circle circle;
+    private final Circle pond;
     private final GameText text;
 
 
@@ -624,18 +654,18 @@ class Pond extends Fixed {
         radius = 25;
         area = Math.PI * Math.pow(radius, 2);
 
-        circle = new Circle(radius);
+        pond = new Circle(radius);
         text = new GameText(String.format("%.0f %%", percentage));
-        circle.setFill(Color.BLUE);
-        circle.setStroke(Color.BLACK);
-        circle.setStrokeWidth(2);
-        circle.setCenterX(cords.getX());
-        circle.setCenterY(cords.getY());
+        pond.setFill(Color.BLUE);
+        pond.setStroke(Color.BLACK);
+        pond.setStrokeWidth(2);
+        pond.setCenterX(cords.getX());
+        pond.setCenterY(cords.getY());
         text.setFill(Color.WHITE);
         text.setX(cords.getX() - 10);
         text.setY(cords.getY() + 10);
 
-        add(circle);
+        add(pond);
         add(text);
     }
 
@@ -648,11 +678,16 @@ class Pond extends Fixed {
     }
 
     private void growPond(){
-        circle.setRadius(circle.getRadius() + .2);
+        pond.setRadius(pond.getRadius() + .2);
     }
 
     public boolean isFull(){
         return percentage >= 99;
+    }
+
+    public Point2D getCenter(){
+        return new Point2D(pond.getCenterX() + this.getTranslateX(),
+                pond.getCenterY() + this.getTranslateY());
     }
 }
 
@@ -1122,8 +1157,75 @@ class GameText extends GameObject {
 
 
 
+class Lines extends GameObject implements Updatable{
+    Cloud cloud;
+    Pond pond;
+    Helicopter helicopter;
+    Line line;
+    boolean showLine;
+
+    public Lines(Cloud cloud, Pond pond){
+        this.cloud = cloud;
+        this.pond = pond;
+        showLine = false;
+        createLine();
+    }
+
+    @Override
+    public void update(){
+        this.getChildren().clear();
+        createLine();
+
+        if(showLine){
+            line.setStroke(Color.PINK);
+        }
+        else{
+            line.setStroke(Color.TRANSPARENT);
+        }
+    }
+
+    public void createLine(){
+        line = new Line(
+                cloud.getCenter().getX(),
+                cloud.getCenter().getY(),
+                pond.getCenter().getX(),
+                pond.getCenter().getY()
+        );
+
+        line.setStrokeWidth(2);
+        add(line);
+    }
+
+    public void toggleVisibility(){
+        showLine = !showLine;
+    }
+}
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//Helicopter States
 abstract class HelicopterState {
     static int maxSpeed = 10;
     Helicopter helicopter;
@@ -1211,7 +1313,7 @@ class Ready extends HelicopterState {
     }
 }
 
-
+//Cloud States
 abstract class CloudState {
     Cloud cloud;
 
