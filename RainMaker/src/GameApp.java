@@ -96,7 +96,7 @@ class Game extends Pane{
         randomSize();
         makeBackground();
 
-        createPond();
+        createPonds();
         createClouds();
         createHelipad();
         createHelicopter(fuel);
@@ -262,8 +262,16 @@ class Game extends Pane{
     }
 
     //Creates Pond object
+    private void createPonds(){
+        for(int i = 0; i < 3; i++){
+            createPond();
+        }
+    }
+
+    //Creates Pond objects
     private void createPond(){
         pond = new Pond(gameSize);
+        ponds.add(pond);
         getChildren().add(pond);
         randomSize();
     }
@@ -284,7 +292,8 @@ class Game extends Pane{
     //Creates a new line between cloud and pond objects
     private void createLines(){
         for(Cloud cloud : clouds){
-            lines.add(new Lines(cloud, pond));
+            for(Pond pond : ponds)
+                lines.add(new Lines(cloud, pond));
         }
         for(Lines line : lines){
             getChildren().add(line);
@@ -311,6 +320,7 @@ class Game extends Pane{
     public void reset(){
         getChildren().clear();
         clouds.clear();
+        ponds.clear();
         lines.clear();
         init();
     }
