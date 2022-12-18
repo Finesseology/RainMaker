@@ -108,7 +108,7 @@ class Game extends Pane{
         checkWinCondition();
         checkLossCondition();
 
-        if(helicopter.state instanceof Ready){
+        if(helicopter.getState() instanceof Ready){
             updateObjects();
         }
     }
@@ -156,8 +156,8 @@ class Game extends Pane{
     private void checkWinCondition(){
         if(helicopter.getFuel() > 0
                 && pond.isFull()
-                && helicopter.state instanceof Off
-                && !Shape.intersect(helicopter.helicopter,
+                && helicopter.getState() instanceof Off
+                && !Shape.intersect(helicopter.getBorder(),
                     helipad.padSquare).getBoundsInLocal().isEmpty()){
             createWinWindow();
             reset();
@@ -320,15 +320,14 @@ class Game extends Pane{
     //If the helicopter is on and pressing space, decreases cloud
     //saturation and fills the pond
     public void saturateCloud() {
-        if(Helicopter.isOn()) {
+        if(helicopter.getState() instanceof Ready) {
             for(Cloud cloud : clouds){
-                if(!Shape.intersect(helicopter.helicopter,
-                        cloud.cloud).getBoundsInLocal().isEmpty()) {
-                    if(cloud.getSaturation() < 100) {
+                if(!Shape.intersect(helicopter.getBorder(),
+                        cloud.getBorder()).getBoundsInLocal().isEmpty()
+                        && cloud.getSaturation() < 100) {
                         cloud.saturate();
-                        if(cloud.getSaturation() >= 30) { //5% fill rate
-                            pond.fillPond(cloud.getSaturation() * .05);
-                        }
+                    if(cloud.getSaturation() >= 30) { //5% fill rate
+                        pond.fillPond(cloud.getSaturation() * .05);
                     }
                 }
             }
@@ -375,13 +374,11 @@ abstract class GameObject extends Group {
         this.getTransforms().addAll(myTranslation, myRotation, myScale);
     }
 
-
     public void rotate(double degrees) {
         myRotation.setAngle(degrees);
         myRotation.setPivotX(0);
         myRotation.setPivotY(0);
     }
-
 
     public void scale(double sx, double sy) {
         myScale.setX(sx);
@@ -557,6 +554,10 @@ class Cloud extends Movable {
                         + heading * speed / 200, //scale cloud movement by 100
                 0
         );
+    }
+
+    public Rectangle getBorder(){
+        return border;
     }
 
 }
@@ -866,29 +867,24 @@ class HeloBlade extends GameObject{
 }
 
 class Helicopter extends Movable implements Updatable {
-    Rectangle helicopter;
+    private Rectangle helicopter;
     private GameText fuelText;
 
     private boolean showBorder;
 
     private int fuel;
-    private static boolean ignitionOn = false;
-
     private double heading = 0;
     private double speed = 0;
-    HeloBody helibody;
-    HeloBlade heliblade;
-    HelicopterState state;
-    int bladeSpeed = 0;
-    int maxSpeed = 10;
-    int minSpeed = -2;
+    private HeloBlade heliblade;
+    private HelicopterState state;
+    private int bladeSpeed = 0;
+    private final int maxSpeed = 10;
 
+    //Initializes the helicopter object
     public Helicopter(Point2D padCenter, int fuel){
         super();
-
         this.fuel = fuel;
         showBorder = false;
-
         state = new Off(this);
 
         makeHelicopter();
@@ -900,6 +896,7 @@ class Helicopter extends Movable implements Updatable {
         this.getTransforms().addAll(myTranslation);
     }
 
+    //Updates the movement and state for the helicopter
     @Override
     public void move() {
         this.getTransforms().clear();
@@ -919,25 +916,25 @@ class Helicopter extends Movable implements Updatable {
         updateFuel();
     }
 
+    //Creates the helicopter all scaled to the game size
     private void makeHelicopter() {
         makeBody();
         makeBlade();
     }
-    private void makeBody(){
-        helibody = new HeloBody();
 
+    //Creates, scales, and positions the helicopter body
+    private void makeBody(){
+        HeloBody helibody = new HeloBody();
         helibody.scale(.5, .5);
         helibody.translate(0, 22);
-
         add(helibody);
     }
 
+    //Creates, scales, and positions the helicopter blade
     private void makeBlade(){
         heliblade = new HeloBlade(new Point2D(-2.5, -145)); //scale .5
-
         heliblade.scale(.5, .5);
         heliblade.translate(0, 27);
-
         add(heliblade);
     }
 
@@ -976,35 +973,13 @@ class Helicopter extends Movable implements Updatable {
         }
     }
 
-    public void rotateLeft(){
-        if(state instanceof Ready){
-            heading += 15;
-        }
-    }
-
-    public void rotateRight(){
-        if(state instanceof Ready){
-            heading -= 15;
-        }
-    }
-
-    public void moveForward(){
-        if(state instanceof Ready && speed <= maxSpeed){
-            speed += .1;
-        }
-    }
-
-    public void moveBackward(){
-        if(state instanceof Ready && speed >= minSpeed){
-            speed -= .1;
-        }
-    }
-
+    //Toggles the boundry box on and off
     public void toggleBoundaries() {
         showBorder = !showBorder;
         drawBorder();
     }
 
+    //Draws the border around the object
     private void drawBorder(){
         if(showBorder){
             helicopter.setStroke(Color.GREEN);
@@ -1016,23 +991,56 @@ class Helicopter extends Movable implements Updatable {
         }
     }
 
-    public void toggleIgnition(){
-        ignitionOn = !ignitionOn;
-        state.Ignition();
+    //Moves Left on key-press
+    public void rotateLeft(){
+        if(state instanceof Ready){
+            heading += 15;
+        }
     }
 
-    public static boolean isOn() {
-        return ignitionOn;
+    //Moves Right on key-press
+    public void rotateRight(){
+        if(state instanceof Ready){
+            heading -= 15;
+        }
+    }
+
+    //Moves Foward on key-press
+    public void moveForward(){
+        if(state instanceof Ready && speed <= maxSpeed){
+            speed += .1;
+        }
+    }
+
+    //Moves Backwards on key-press
+    public void moveBackward(){
+        int minSpeed = -2;
+        if(state instanceof Ready && speed >= minSpeed){
+            speed -= .1;
+        }
+    }
+
+    //Toggles the helicopter ignition on and off
+    public void toggleIgnition(){
+        state.Ignition();
     }
 
     public int getFuel(){
         return fuel;
     }
 
+    //Changes this helicopters state based on ignition state
     public void changeState(HelicopterState state){
         this.state = state;
     }
 
+    public HelicopterState getState() {
+        return state;
+    }
+
+    public Rectangle getBorder(){
+        return helicopter;
+    }
 }
 
 class GameText extends GameObject {
@@ -1064,9 +1072,6 @@ class GameText extends GameObject {
     }
 
 }
-
-
-
 
 
 
@@ -1158,6 +1163,11 @@ class Ready extends HelicopterState {
         return maxSpeed; //returns to max speed
     }
 }
+
+
+
+
+
 
 
 
