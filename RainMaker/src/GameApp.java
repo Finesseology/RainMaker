@@ -1,14 +1,19 @@
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Rotate;
@@ -62,6 +67,7 @@ class Game extends Pane{
     private final ArrayList<Cloud> clouds = new ArrayList<>();
     private Pond pond;
     private Helicopter helicopter;
+    private Helipad helipad;
     private int frames;
     private final Random rand = new Random();
     private Point2D gameSize;
@@ -81,35 +87,7 @@ class Game extends Pane{
         loop.start();
     }
 
-    private void run(){
-        updateClouds();
-        updateHelicopter();
-        if(helicopter.getFuel() <= 0){
-            reset();
-        }
-        if(Helicopter.isOn()){
-            updateObjects();
-        }
-    }
-
-    private void updateClouds(){
-        for(Cloud cloud : clouds){
-            cloud.move();
-        }
-    }
-
-    private void updateHelicopter(){
-        helicopter.move(); //updates the helicopter with inputs
-    }
-
-    private void updateObjects(){
-        for(Cloud cloud : clouds){
-            if((int) cloud.getSaturation() > 0 && frames % 150 == 0){
-                cloud.desaturate();
-            }
-        }
-    }
-
+    //Initialized the Game object
     private void init(){
         int fuel = 25000;
         frames = 0;
@@ -121,6 +99,137 @@ class Game extends Pane{
         createClouds();
         createHelipad();
         createHelicopter(fuel);
+    }
+
+    //main logic for running the game
+    private void run(){
+        updateClouds();
+        updateHelicopter();
+        checkWinCondition();
+        checkLossCondition();
+
+        if(helicopter.state instanceof Ready){
+            updateObjects();
+        }
+    }
+
+    //Create a win window
+    private void createWinWindow(){
+        Stage stage = new Stage();
+        VBox root = new VBox();
+        Scene scene = new Scene(root, 600, 500);
+        stage.setScene(scene);
+        stage.setTitle("You win!");
+        stage.show();
+
+        HBox buttons = new HBox();
+
+        Button yes = new Button("Yes");
+        Button no = new Button("No");
+
+        Label overText = new Label("Restart the game?");
+        Font font = Font.font("Courier New", FontWeight.BOLD, 24);
+        overText.setFont(font);
+
+        yes.setOnAction(e -> stage.close());
+        no.setOnAction(e -> Platform.exit());
+
+        buttons.setAlignment(Pos.CENTER);
+        buttons.setSpacing(40);
+        yes.setFont(font);
+        no.setFont(font);
+        buttons.getChildren().addAll(overText, yes, no);
+
+        root.getChildren().add(buttons);
+
+        BackgroundImage bg = new BackgroundImage(
+                new Image("win.jpg"),
+                BackgroundRepeat.NO_REPEAT,
+                BackgroundRepeat.NO_REPEAT,
+                BackgroundPosition.CENTER,
+                BackgroundSize.DEFAULT
+        );
+        root.setBackground(new Background(bg));
+    }
+
+    //If the ponds are full and the helicopter is back safely
+    private void checkWinCondition(){
+        if(helicopter.getFuel() > 0
+                && pond.isFull()
+                && helicopter.state instanceof Off
+                && !Shape.intersect(helicopter.helicopter,
+                    helipad.padSquare).getBoundsInLocal().isEmpty()){
+            createWinWindow();
+            reset();
+        }
+    }
+
+    //If the helicopter runs out of fuel
+    private void checkLossCondition(){
+        if(helicopter.getFuel() <= 0){
+            createLossWindow();
+            reset();
+        }
+    }
+
+    //Create a Loss window
+    private void createLossWindow(){
+        Stage stage = new Stage();
+        VBox root = new VBox();
+        Scene scene = new Scene(root, 600, 500);
+        stage.setScene(scene);
+        stage.setTitle("Game over");
+        stage.show();
+
+        HBox buttons = new HBox();
+
+        Button yes = new Button("Yes");
+        Button no = new Button("No");
+
+        Label overText = new Label("Restart the game?");
+        Font font = Font.font("Courier New", FontWeight.BOLD, 24);
+        overText.setFont(font);
+
+        yes.setOnAction(e -> stage.close());
+        no.setOnAction(e -> Platform.exit());
+
+        buttons.setAlignment(Pos.CENTER);
+        buttons.setSpacing(40);
+        yes.setFont(font);
+        no.setFont(font);
+        buttons.getChildren().addAll(overText, yes, no);
+
+        root.getChildren().add(buttons);
+
+        BackgroundImage bg = new BackgroundImage(
+                new Image("gameover.png"),
+                BackgroundRepeat.NO_REPEAT,
+                BackgroundRepeat.NO_REPEAT,
+                BackgroundPosition.CENTER,
+                BackgroundSize.DEFAULT
+        );
+        root.setBackground(new Background(bg));
+    }
+
+    //Updates all of the cloud movements
+    private void updateClouds(){
+        for(Cloud cloud : clouds){
+            cloud.move();
+        }
+    }
+
+    //updates all of the helicopter movements
+    private void updateHelicopter(){
+        helicopter.move(); //updates the helicopter with inputs
+    }
+
+    //Updates all of the cloud objects as the helicopter takes water
+    private void updateObjects(){
+        for(Cloud cloud : clouds){
+            if((int) cloud.getSaturation() > 0 && frames % 150 == 0){
+                cloud.desaturate();
+            }
+        }
     }
 
     //Creates Cloud objects and stores them in ArrayList
@@ -141,7 +250,8 @@ class Game extends Pane{
 
     //Creates Helipad Object
     private void createHelipad(){
-        getChildren().add(new Helipad());
+        helipad = new Helipad();
+        getChildren().add(helipad);
     }
 
     //Creates Helicopter Object
@@ -491,6 +601,10 @@ class Pond extends Fixed {
 
     private void growPond(){
         circle.setRadius(circle.getRadius() + .2);
+    }
+
+    public boolean isFull(){
+        return percentage >= 99;
     }
 }
 
