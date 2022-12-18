@@ -214,6 +214,10 @@ class Game extends Pane{
     //Updates all of the cloud movements
     private void updateClouds(){
         for(Cloud cloud : clouds){
+            if(cloud.getTranslateX()
+                    > GameApp.windowSize.getX() + cloud.getSize()){
+                cloud.changeState(new CloudDead(cloud));
+            }
             cloud.move();
         }
     }
@@ -448,6 +452,7 @@ class Cloud extends Movable {
     private GameText text;
     private boolean showBorder;
     private Rectangle border;
+    private CloudState state;
 
 
     public Cloud(Point2D cords, double speed, double heading) {
@@ -458,6 +463,7 @@ class Cloud extends Movable {
         radius = 50;
         area = Math.PI * Math.pow(radius, 2);
         showBorder = false;
+        state = new CloudAlive(this);
 
         initCloud();
         makeBorder();
@@ -547,17 +553,45 @@ class Cloud extends Movable {
         drawBorder();
     }
 
+    //Changes this clouds state based on ignition state
+    public void changeState(CloudState state){
+        this.state = state;
+    }
+
+    public void respawn(){
+        if(state instanceof CloudAlive){
+            System.out.println("> " + cloud.getTranslateX());
+        }
+        System.out.println(state);
+        translate(
+                -200, //spawn 200 points left of screen
+                500
+        );
+    }
+
+    public void update(){
+        state.updateCloud();
+    }
+
     @Override
     public void move(){
-        translate(
-                myTranslation.getX()
-                        + heading * speed / 200, //scale cloud movement by 100
-                0
-        );
+        state.updateCloud();
     }
 
     public Rectangle getBorder(){
         return border;
+    }
+
+    public double getHeading(){
+        return heading;
+    }
+
+    public double getSpeed(){
+        return speed;
+    }
+
+    public double getSize(){
+        return radius;
     }
 
 }
@@ -910,7 +944,7 @@ class Helicopter extends Movable implements Updatable {
         );
         this.getTransforms().addAll(myTranslation, myRotation);
 
-        bladeSpeed = state.Blades(bladeSpeed);
+        bladeSpeed = state.bladeSpeed(bladeSpeed);
         heliblade.update(bladeSpeed);
 
         updateFuel();
@@ -1022,7 +1056,7 @@ class Helicopter extends Movable implements Updatable {
 
     //Toggles the helicopter ignition on and off
     public void toggleIgnition(){
-        state.Ignition();
+        state.ignition();
     }
 
     public int getFuel(){
@@ -1085,8 +1119,8 @@ abstract class HelicopterState {
         this.helicopter = helicopter;
     }
 
-    abstract void Ignition();
-    abstract int Blades(int bladeSpeed);
+    abstract void ignition();
+    abstract int bladeSpeed(int bladeSpeed);
 }
 
 class Off extends HelicopterState {
@@ -1095,12 +1129,12 @@ class Off extends HelicopterState {
     }
 
     @Override
-    void Ignition(){
+    void ignition(){
         helicopter.changeState(new Starting(helicopter));
     }
 
     @Override
-    int Blades(int bladeSpeed){
+    int bladeSpeed(int bladeSpeed){
         return 0;
     }
 }
@@ -1110,12 +1144,12 @@ class Starting extends HelicopterState {
         super(heli);
     }
     @Override
-    void Ignition(){
+    void ignition(){
         helicopter.changeState(new Stopping(helicopter));
     }
 
     @Override
-    int Blades(int bladeSpeed){
+    int bladeSpeed(int bladeSpeed){
         if(bladeSpeed < maxSpeed){
             bladeSpeed++;
         }
@@ -1132,12 +1166,12 @@ class Stopping extends HelicopterState {
         super(heli);
     }
     @Override
-    void Ignition(){
+    void ignition(){
         helicopter.changeState(new Starting(helicopter));
     }
 
     @Override
-    int Blades(int bladeSpeed){
+    int bladeSpeed(int bladeSpeed){
         if(bladeSpeed > 0)
             bladeSpeed--;
 
@@ -1154,18 +1188,51 @@ class Ready extends HelicopterState {
     }
 
     @Override
-    void Ignition(){
+    void ignition(){
         helicopter.changeState(new Stopping(helicopter));
     }
 
     @Override
-    int Blades(int bladeSpeed){
+    int bladeSpeed(int bladeSpeed){
         return maxSpeed; //returns to max speed
     }
 }
 
 
+abstract class CloudState {
+    Cloud cloud;
 
+    CloudState(Cloud cloud){
+        this.cloud = cloud;
+    }
+
+    abstract void updateCloud();
+}
+
+class CloudAlive extends CloudState {
+    public CloudAlive(Cloud cloud) {
+        super(cloud);
+    }
+
+    @Override
+    void updateCloud() {
+        cloud.setTranslateX(cloud.getTranslateX() + cloud.getSpeed() * .3);
+        System.out.println(cloud.getTranslateX());
+    }
+}
+
+class CloudDead extends CloudState {
+    public CloudDead(Cloud cloud) {
+        super(cloud);
+    }
+
+    @Override
+    void updateCloud() {
+        cloud.getTransforms().clear();
+        cloud.respawn();
+        cloud.changeState(new CloudAlive(cloud));
+    }
+}
 
 
 
