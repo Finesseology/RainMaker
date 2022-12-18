@@ -235,7 +235,7 @@ class Game extends Pane{
     //Updates all of the cloud objects as the helicopter takes water
     private void updateObjects(){
         for(Cloud cloud : clouds){
-            if((int) cloud.getSaturation() > 0 && frames % 150 == 0){
+            if(cloud.isNotEmpty() && frames % 150 == 0){
                 cloud.desaturate();
             }
         }
@@ -368,17 +368,27 @@ class Game extends Pane{
     //If the helicopter is on and pressing space, decreases cloud
     //saturation and fills the pond
     public void saturateCloud() {
-        if(helicopter.getState() instanceof Ready) {
-            for(Cloud cloud : clouds){
-                if(!Shape.intersect(helicopter.getBorder(),
-                        cloud.getBorder()).getBoundsInLocal().isEmpty()
-                        && cloud.getSaturation() < 100) {
-                        cloud.saturate();
-                    if(cloud.getSaturation() >= 30) { //5% fill rate
-                        pond.fillPond(cloud.getSaturation() * .05);
-                    }
+        for(Cloud cloud : clouds){
+            if(overCloud(cloud) && cloud.notFull()) {
+                cloud.saturate();
+                if(cloud.isReadyToFill()) { //5% fill rate
+                    fillPonds(cloud);
                 }
             }
+        }
+    }
+
+    //Checks to see if helicopter is over a cloud
+    private boolean overCloud(Cloud cloud){
+        return !Shape.intersect(helicopter.getBorder(),
+                cloud.getBorder()).getBoundsInLocal().isEmpty();
+    }
+
+    //Fills the ponds with water
+    private void fillPonds(Cloud cloud){
+        double fillRate = cloud.getSaturation() * .01;
+        for(Pond pond : ponds){
+            pond.fillPond(fillRate);
         }
     }
 
@@ -578,6 +588,18 @@ class Cloud extends Movable {
 
     public double getSaturation(){
         return saturation;
+    }
+
+    public boolean notFull(){
+        return saturation < 100;
+    }
+
+    public boolean isNotEmpty(){
+        return saturation > 0;
+    }
+
+    public boolean isReadyToFill(){
+        return saturation >= 30;
     }
 
     public void saturate() {
