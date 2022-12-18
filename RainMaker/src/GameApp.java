@@ -1255,6 +1255,7 @@ class Off extends HelicopterState {
 }
 
 class Starting extends HelicopterState {
+    private int wait = 0;
     Starting(Helicopter heli){
         super(heli);
     }
@@ -1265,18 +1266,21 @@ class Starting extends HelicopterState {
 
     @Override
     int bladeSpeed(int bladeSpeed){
-        if(bladeSpeed < maxSpeed){
-            bladeSpeed++;
+        wait++;
+        if(wait % 50 == 0){
+            if(bladeSpeed < maxSpeed){
+                bladeSpeed++;
+            }
+            if(bladeSpeed == maxSpeed){
+                helicopter.changeState(new Ready(helicopter));
+            }
         }
-        if(bladeSpeed == maxSpeed){
-            helicopter.changeState(new Ready(helicopter));
-        }
-
         return bladeSpeed;
     }
 }
 
 class Stopping extends HelicopterState {
+    private int wait = 0;
     Stopping(Helicopter heli){
         super(heli);
     }
@@ -1287,12 +1291,15 @@ class Stopping extends HelicopterState {
 
     @Override
     int bladeSpeed(int bladeSpeed){
-        if(bladeSpeed > 0)
-            bladeSpeed--;
-
-        if(bladeSpeed == 0)
-            helicopter.changeState(new Off(helicopter));
-
+        wait++;
+        if(wait % 100 == 0) {
+            if (bladeSpeed > 0) {
+                bladeSpeed--;
+            }
+            if (bladeSpeed == 0) {
+                helicopter.changeState(new Off(helicopter));
+            }
+        }
         return 0;
     }
 }
