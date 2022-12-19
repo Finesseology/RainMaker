@@ -21,15 +21,12 @@ import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
-
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
-
 public class GameApp extends Application {
     static final Point2D windowSize = new Point2D(1000, 1000);
-
 
     public static void main(String[] args) {
         launch(args);
@@ -39,11 +36,10 @@ public class GameApp extends Application {
         Game game = new Game();
         Scene scene = new Scene(game, windowSize.getX(), windowSize.getY(), Color.BLACK);
 
-
         game.setScaleY(-1);
         stage.setScene(scene);
         stage.setTitle("RainMaker");
-        //stage.setResizable(false);
+        stage.setResizable(false);
         stage.show();
 
         scene.setOnKeyPressed(event -> {
@@ -66,14 +62,11 @@ class Game extends Pane{
     private final ArrayList<Cloud> clouds = new ArrayList<>();
     private final ArrayList<Pond> ponds = new ArrayList<>();
     private final ArrayList<Lines> lines = new ArrayList<>();
-    private Pond pond;
     private Helicopter helicopter;
     private Helipad helipad;
     private int frames;
     private final Random rand = new Random();
     private Point2D gameSize;
-    static double WIND_SPEED = 1;
-    static double WIND_DIRECTION = 45;
 
 
     Game(){
@@ -154,13 +147,24 @@ class Game extends Pane{
     //If the ponds are full and the helicopter is back safely
     private void checkWinCondition(){
         if(helicopter.getFuel() > 0
-                && pond.isFull()
+                && checkPondsFull()
                 && helicopter.getState() instanceof Off
                 && !Shape.intersect(helicopter.getBorder(),
                     helipad.padBorder()).getBoundsInLocal().isEmpty()){
             createWinWindow();
             reset();
         }
+    }
+
+    //checks to see if all the ponds in the game are full
+    private boolean checkPondsFull(){
+        int full = 0;
+        for(Pond pond : ponds){
+            if(pond.isFull()){
+                full += 1;
+            }
+        }
+        return full == ponds.size();
     }
 
     //If the helicopter runs out of fuel
@@ -210,7 +214,7 @@ class Game extends Pane{
         root.setBackground(new Background(bg));
     }
 
-    //Updates all of the cloud movements
+    //Updates all the cloud movements
     private void updateClouds(){
         for(Cloud cloud : clouds){
             //if the cloud is offscreen, it is dead
@@ -218,6 +222,7 @@ class Game extends Pane{
                     > GameApp.windowSize.getX() + cloud.getSize() * 4){
                 cloud.changeState(new CloudDead(cloud));
             }
+            //If the cloud can be used, take water from it
             if(helicopter.getState() instanceof Ready
                     && cloud.isNotEmpty() && frames % 150 == 0){
                 cloud.desaturate();
@@ -226,7 +231,7 @@ class Game extends Pane{
         }
     }
 
-    //updates all of the helicopter movements
+    //updates all the helicopter movements
     private void updateHelicopter(){
         helicopter.move(); //updates the helicopter with inputs
     }
@@ -246,6 +251,8 @@ class Game extends Pane{
     }
 
     private void createCloud(){
+        double WIND_SPEED = 1;
+        double WIND_DIRECTION = 45;
         Cloud cloud = new Cloud(WIND_SPEED, WIND_DIRECTION);
         clouds.add(cloud);
         getChildren().add(cloud);
@@ -261,7 +268,7 @@ class Game extends Pane{
 
     //Creates Pond objects
     private void createPond(){
-        pond = new Pond(gameSize);
+        Pond pond = new Pond(gameSize);
         ponds.add(pond);
         getChildren().add(pond);
         randomSize();
@@ -363,7 +370,7 @@ class Game extends Pane{
             if(overCloud(cloud) && cloud.notFull()) {
                 cloud.saturate();
                 if(cloud.isReadyToFill()) { //5% fill rate
-                    fillPonds(cloud);
+                    fillPonds();
                 }
             }
         }
@@ -376,20 +383,41 @@ class Game extends Pane{
     }
 
     //Fills the ponds with water
-    private void fillPonds(Cloud cloud){
-        double fillRate = cloud.getSaturation() * .06;
-        findClosestPond().fillPond(fillRate);
+    private void fillPonds(){
+        findShortestLine().pond()
+                .fillPond(calculateFillRate(findShortestLine()));
     }
 
-    //Calculates the closest pond to the current cloud
-    private Pond findClosestPond(){
+    //Calculates the fillRate based on line length
+    private double calculateFillRate(Lines line){
+        double fillRate = 5.0;
+        for(Pond pond : ponds){
+            double distance = line.getDistance() / pond.getRadius()*2;
+            if(distance >= 15) {
+                fillRate = 0.0;
+            }
+            else if(distance >= 10) {
+                fillRate *= 0.25;
+            }
+            else if(distance >= 5) {
+                fillRate *= 0.5;
+            }
+            else if(distance >= 3) {
+                fillRate *= 0.75;
+            }
+        }
+        return fillRate;
+    }
+
+    //Calculates the closest Line to the current cloud
+    private Lines findShortestLine(){
         Lines shortest = lines.get(0);
         for(Lines line : lines){
             if(line.getDistance() < shortest.getDistance()){
                 shortest = line;
             }
         }
-        return shortest.pond();
+        return shortest;
     }
 
     //Creates a scalable background from a png
@@ -407,10 +435,12 @@ class Game extends Pane{
     }
 }
 
+//Classes that need to be updated should inherit this class
 interface Updatable {
-    public void update();
+    void update();
 }
 
+//GameObject allows for the easy manipulation of moving and scaling objects
 abstract class GameObject extends Group {
     protected Translate myTranslation;
     protected Rotate myRotation;
@@ -470,6 +500,7 @@ abstract class GameObject extends Group {
     }
 }
 
+//Classes that are unable to move used this abstract class
 abstract class Fixed extends GameObject{
     public Fixed(){
         super();
@@ -480,6 +511,7 @@ abstract class Fixed extends GameObject{
     }
 }
 
+//Classes that are able to move used this abstract class
 abstract class Movable extends GameObject{
     double heading;
     double speed;
@@ -488,18 +520,15 @@ abstract class Movable extends GameObject{
         super();
     }
 
-    public Movable(Point2D cords){
-        super(cords);
-    }
-
     public abstract void move();
 
 }
 
+//Creates the floating intractable clouds in the game
 class Cloud extends Movable {
     private double saturation;
     private Color color;
-    private final double radius;
+    private double radius;
     private Ellipse cloud;
     private GameText text;
     private boolean showBorder;
@@ -508,13 +537,13 @@ class Cloud extends Movable {
     private final Random rand = new Random();
     private Point2D spawn;
 
-
+    //Creates the initial cloud
     public Cloud(double speed, double heading) {
         super();
         this.speed = speed;
         this.heading = heading;
         saturation = 0;
-        radius = 50;
+        radius = ThreadLocalRandom.current().nextInt(40, 50);
         showBorder = false;
         spawn = new Point2D(0, 0);
         state = new CloudAlive(this);
@@ -586,10 +615,6 @@ class Cloud extends Movable {
         }
     }
 
-    public double getSaturation(){
-        return saturation;
-    }
-
     public boolean notFull(){
         return saturation < 100;
     }
@@ -638,9 +663,11 @@ class Cloud extends Movable {
         this.state = state;
     }
 
+    //when clouds die, respawn resets them
     public void respawn(){
         randomSpawn();
         randomizeSpeed();
+        radius = ThreadLocalRandom.current().nextInt(40, 60);
         color = Color.rgb(255, 255, 255);
         saturation = 0;
         text.setText(String.format("%.0f %%", saturation));
@@ -672,19 +699,18 @@ class Cloud extends Movable {
     }
 }
 
+//Creates the pond objects filled with water in the game
 class Pond extends Fixed {
-    private double radius;
-    private double area;
     private double percentage;
+    private final double radius;
     private final Circle pond;
     private final GameText text;
 
 
     public Pond(Point2D cords) {
         super(cords);
-        percentage = 20;
-        radius = 40;
-        area = Math.PI * Math.pow(radius, 2);
+        percentage = ThreadLocalRandom.current().nextInt(20, 30);
+        radius = percentage * 2;
 
         pond = new Circle(radius);
         text = new GameText(String.format("%.0f %%", percentage));
@@ -703,14 +729,14 @@ class Pond extends Fixed {
 
     public void fillPond(double fillRate) {
         if(percentage < 100){
-            percentage += fillRate / 2;
-            growPond();
+            percentage += fillRate;
+            growPond(fillRate);
             text.setText(String.format("%.0f %%", percentage));
         }
     }
 
-    private void growPond(){
-        pond.setRadius(pond.getRadius() + .2);
+    private void growPond(double fillRate){
+        pond.setRadius(pond.getRadius() + fillRate);
     }
 
     public boolean isFull(){
@@ -721,8 +747,13 @@ class Pond extends Fixed {
         return new Point2D(pond.getCenterX() + this.getTranslateX(),
                 pond.getCenterY() + this.getTranslateY());
     }
+
+    public double getRadius(){
+        return radius;
+    }
 }
 
+//Creates the helipad graphics
 class Helipad extends Fixed {
     private Rectangle padSquare;
     private final int radius;
@@ -788,6 +819,7 @@ class Helipad extends Fixed {
     }
 }
 
+//Creates the helicopter body graphics
 class HeloBody extends Fixed{
     private Circle rotorCenter;
     private Rectangle rotorMain;
@@ -982,6 +1014,7 @@ class HeloBlade extends GameObject{
 
 }
 
+//The helicopter object used as the main interactive piece for the game
 class Helicopter extends Movable implements Updatable {
     private Rectangle helicopter;
     private GameText fuelText;
@@ -1155,6 +1188,7 @@ class Helicopter extends Movable implements Updatable {
 
 }
 
+//Creates text object easily transformable for our game objects
 class GameText extends GameObject {
     Text text;
 
@@ -1184,7 +1218,6 @@ class GameText extends GameObject {
     }
 
 }
-
 
 //Creates and deals with the lines of the objects on screen
 class Lines extends GameObject implements Updatable{
@@ -1248,7 +1281,7 @@ class Lines extends GameObject implements Updatable{
         add(distanceText);
     }
 
-    //Toggles wether or no the lines should be visable
+    //Toggles wether or no the lines should be visible
     public void toggleVisibility(){
         showLine = !showLine;
     }
@@ -1261,30 +1294,6 @@ class Lines extends GameObject implements Updatable{
         return pond;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 //Helicopter States
 abstract class HelicopterState {
@@ -1299,6 +1308,7 @@ abstract class HelicopterState {
     abstract int bladeSpeed(int bladeSpeed);
 }
 
+//Helicopter State for ignition off
 class Off extends HelicopterState {
     Off(Helicopter helicopter){
         super(helicopter);
@@ -1315,6 +1325,7 @@ class Off extends HelicopterState {
     }
 }
 
+//Helicopter State for spinning up the rotors
 class Starting extends HelicopterState {
     private int wait = 0;
     Starting(Helicopter heli){
@@ -1340,6 +1351,7 @@ class Starting extends HelicopterState {
     }
 }
 
+//Helicopter State for slowing down the rotors
 class Stopping extends HelicopterState {
     private int wait = 0;
     Stopping(Helicopter heli){
@@ -1365,6 +1377,7 @@ class Stopping extends HelicopterState {
     }
 }
 
+//Helicopter State for being ready to fly
 class Ready extends HelicopterState {
     Ready(Helicopter heli){
         super(heli);
@@ -1392,6 +1405,7 @@ abstract class CloudState {
     abstract void updateCloud();
 }
 
+//Cloud State for being onscreen
 class CloudAlive extends CloudState {
     public CloudAlive(Cloud cloud) {
         super(cloud);
@@ -1403,6 +1417,7 @@ class CloudAlive extends CloudState {
     }
 }
 
+//Cloud State for being offscreen
 class CloudDead extends CloudState {
     public CloudDead(Cloud cloud) {
         super(cloud);
@@ -1415,13 +1430,4 @@ class CloudDead extends CloudState {
         cloud.changeState(new CloudAlive(cloud));
     }
 }
-
-
-
-
-
-
-
-
-
 
