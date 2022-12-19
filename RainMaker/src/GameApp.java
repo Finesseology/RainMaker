@@ -1281,11 +1281,12 @@ class Lines extends GameObject implements Updatable{
         add(distanceText);
     }
 
-    //Toggles wether or no the lines should be visible
+    //Toggles whether or not the lines should be visible
     public void toggleVisibility(){
         showLine = !showLine;
     }
 
+    //Used to find the distance of the current line.
     public double getDistance(){
         return distance;
     }
