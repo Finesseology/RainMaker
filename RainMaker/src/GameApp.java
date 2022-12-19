@@ -241,6 +241,7 @@ class Game extends Pane{
         }
     }
 
+    //Updates the lines position/drawing and the distance between them
     private void updateLines(){
         for(Lines line : lines){
             line.update();
@@ -387,6 +388,8 @@ class Game extends Pane{
     //Fills the ponds with water
     private void fillPonds(Cloud cloud){
         double fillRate = cloud.getSaturation() * .01;
+        //calculate which pond needs to be filled
+
         for(Pond pond : ponds){
             pond.fillPond(fillRate);
         }
@@ -640,6 +643,8 @@ class Cloud extends Movable {
 
     public void respawn(){
         randomSpawn();
+        randomizeSpeed();
+        color = Color.rgb(255, 255, 255);
         saturation = 0;
         text.setText(String.format("%.0f %%", saturation));
         cloud.setFill(Color.WHITE);
@@ -700,7 +705,7 @@ class Pond extends Fixed {
     }
 
     public void fillPond(double fillRate) {
-        if(percentage < 99){
+        if(percentage < 100){
             percentage += fillRate / 2;
             growPond();
             text.setText(String.format("%.0f %%", percentage));
@@ -1202,29 +1207,34 @@ class GameText extends GameObject {
 
 
 class Lines extends GameObject implements Updatable{
-    Cloud cloud;
-    Pond pond;
-    Helicopter helicopter;
-    Line line, line2;
-    boolean showLine;
+    private final Cloud cloud;
+    private final Pond pond;
+    private Line line;
+    private GameText distanceText;
+    private boolean showLine;
+    private double distance;
 
     public Lines(Cloud cloud, Pond pond){
         this.cloud = cloud;
         this.pond = pond;
+        distance = 0;
         showLine = false;
         createLine();
+        createText();
     }
 
     @Override
     public void update(){
         this.getChildren().clear();
         createLine();
-
+        createText();
         if(showLine){
             line.setStroke(Color.PINK);
+            distanceText.setFill(Color.DEEPPINK);
         }
         else{
             line.setStroke(Color.TRANSPARENT);
+            distanceText.setFill(Color.TRANSPARENT);
         }
     }
 
@@ -1235,12 +1245,27 @@ class Lines extends GameObject implements Updatable{
                 pond.getCenter().getX(),
                 pond.getCenter().getY()
         );
+        distance = Math.hypot(
+                cloud.getCenter().getX() - pond.getCenter().getX(),
+                cloud.getCenter().getY() - pond.getCenter().getY()
+        );
         line.setStrokeWidth(2);
         add(line);
     }
 
+    public void createText(){
+        distanceText = new GameText(String.format("%.0f ", distance));
+        distanceText.setX(line.getBoundsInLocal().getCenterX() - 10);
+        distanceText.setY(line.getBoundsInLocal().getCenterY() - 10);
+        add(distanceText);
+    }
+
     public void toggleVisibility(){
         showLine = !showLine;
+    }
+
+    public double getDistance(){
+        return distance;
     }
 }
 
