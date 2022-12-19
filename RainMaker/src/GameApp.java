@@ -392,7 +392,6 @@ class Game extends Pane{
         return shortest.pond();
     }
 
-
     //Creates a scalable background from a png
     private void makeBackground(){
         //https://opengameart.org/node/10024
@@ -1016,7 +1015,6 @@ class Helicopter extends Movable implements Updatable {
     public void move() {
         this.getTransforms().clear();
         rotate(heading);
-
         translate(
                 myTranslation.getX()
                         + Math.sin(Math.toRadians(heading)) * -speed,
@@ -1024,10 +1022,8 @@ class Helicopter extends Movable implements Updatable {
                         + Math.cos(Math.toRadians(heading)) * speed
         );
         this.getTransforms().addAll(myTranslation, myRotation);
-
         bladeSpeed = state.bladeSpeed(bladeSpeed);
         heliblade.update(bladeSpeed);
-
         updateFuel();
     }
 
@@ -1078,7 +1074,7 @@ class Helicopter extends Movable implements Updatable {
             if(Math.abs(speed - 0.0) < 0.001){  //idle fuel
                 fuel -= 10;
             }
-            else if(speed < maxSpeed / 2){      //helicopter moves slowly
+            else if(speed < maxSpeed / 2.0){      //helicopter moves slowly
                 fuel -= Math.abs(speed * 2);
             }
             else{                               //helicopter moves fast
@@ -1088,7 +1084,7 @@ class Helicopter extends Movable implements Updatable {
         }
     }
 
-    //Toggles the boundry box on and off
+    //Toggles the boundary box on and off
     public void toggleBoundaries() {
         showBorder = !showBorder;
         drawBorder();
@@ -1157,19 +1153,6 @@ class Helicopter extends Movable implements Updatable {
         return helicopter;
     }
 
-    public Point2D getCenter(){
-        /*
-        return new Point2D(
-                helicopter.getX() + this.getTranslateX(),
-                helicopter.getY() + this.getTranslateY()
-        );
-
-         */
-        return new Point2D(
-                ( helicopter.getX() + helicopter.getWidth() / 2 ) + this.getTranslateX(),
-                helicopter.getY()
-        );
-    }
 }
 
 class GameText extends GameObject {
@@ -1203,7 +1186,7 @@ class GameText extends GameObject {
 }
 
 
-
+//Creates and deals with the lines of the objects on screen
 class Lines extends GameObject implements Updatable{
     private final Cloud cloud;
     private final Pond pond;
@@ -1225,6 +1208,7 @@ class Lines extends GameObject implements Updatable{
     public void update(){
         this.getChildren().clear();
         createLine();
+        calculateDistance();
         createText();
         if(showLine){
             line.setStroke(Color.PINK);
@@ -1236,28 +1220,35 @@ class Lines extends GameObject implements Updatable{
         }
     }
 
-    public void createLine(){
+    //Creates the lines to be drawn between clouds and ponds
+    private void createLine(){
         line = new Line(
                 cloud.getCenter().getX(),
                 cloud.getCenter().getY(),
                 pond.getCenter().getX(),
                 pond.getCenter().getY()
         );
-        distance = Math.hypot(
-                cloud.getCenter().getX() - pond.getCenter().getX(),
-                cloud.getCenter().getY() - pond.getCenter().getY()
-        );
         line.setStrokeWidth(2);
         add(line);
     }
 
-    public void createText(){
+    //Calculates the distance between current pond and cloud
+    private void calculateDistance(){
+        distance = Math.hypot(
+                cloud.getCenter().getX() - pond.getCenter().getX(),
+                cloud.getCenter().getY() - pond.getCenter().getY()
+        );
+    }
+
+    //Creates the text to be placed on the lines to display distance
+    private void createText(){
         distanceText = new GameText(String.format("%.0f ", distance));
         distanceText.setX(line.getBoundsInLocal().getCenterX() - 10);
         distanceText.setY(line.getBoundsInLocal().getCenterY() - 10);
         add(distanceText);
     }
 
+    //Toggles wether or no the lines should be visable
     public void toggleVisibility(){
         showLine = !showLine;
     }
