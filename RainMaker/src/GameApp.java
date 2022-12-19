@@ -108,13 +108,8 @@ class Game extends Pane{
         updateHelicopter();
         updateClouds();
         updateLines();
-
         checkWinCondition();
         checkLossCondition();
-
-        if(helicopter.getState() instanceof Ready){
-            updateObjects();
-        }
     }
 
     //Create a win window
@@ -223,6 +218,10 @@ class Game extends Pane{
                     > GameApp.windowSize.getX() + cloud.getSize() * 4){
                 cloud.changeState(new CloudDead(cloud));
             }
+            if(helicopter.getState() instanceof Ready
+                    && cloud.isNotEmpty() && frames % 150 == 0){
+                cloud.desaturate();
+            }
             cloud.move();
         }
     }
@@ -230,15 +229,6 @@ class Game extends Pane{
     //updates all of the helicopter movements
     private void updateHelicopter(){
         helicopter.move(); //updates the helicopter with inputs
-    }
-
-    //Updates all of the cloud objects as the helicopter takes water
-    private void updateObjects(){
-        for(Cloud cloud : clouds){
-            if(cloud.isNotEmpty() && frames % 150 == 0){
-                cloud.desaturate();
-            }
-        }
     }
 
     //Updates the lines position/drawing and the distance between them
@@ -387,13 +377,21 @@ class Game extends Pane{
 
     //Fills the ponds with water
     private void fillPonds(Cloud cloud){
-        double fillRate = cloud.getSaturation() * .01;
-        //calculate which pond needs to be filled
-
-        for(Pond pond : ponds){
-            pond.fillPond(fillRate);
-        }
+        double fillRate = cloud.getSaturation() * .06;
+        findClosestPond().fillPond(fillRate);
     }
+
+    //Calculates the closest pond to the current cloud
+    private Pond findClosestPond(){
+        Lines shortest = lines.get(0);
+        for(Lines line : lines){
+            if(line.getDistance() < shortest.getDistance()){
+                shortest = line;
+            }
+        }
+        return shortest.pond();
+    }
+
 
     //Creates a scalable background from a png
     private void makeBackground(){
@@ -1267,6 +1265,10 @@ class Lines extends GameObject implements Updatable{
     public double getDistance(){
         return distance;
     }
+
+    public Pond pond(){
+        return pond;
+    }
 }
 
 
@@ -1335,7 +1337,7 @@ class Starting extends HelicopterState {
     @Override
     int bladeSpeed(int bladeSpeed){
         wait++;
-        if(wait % 50 == 0){
+        if(wait % 40 == 0){
             if(bladeSpeed < maxSpeed){
                 bladeSpeed++;
             }
